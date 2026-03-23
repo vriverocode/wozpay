@@ -26,7 +26,7 @@
 
 				<!-- Selectores de tipo de plan -->
 				<div class=" q-mb-lg row justify-center">
-					<div class="col-3 col-md-2 q-px-xs flex justify-center" v-for="plan in planTypes" :key="plan">
+					<div class="col-4 col-md-2 q-px-xs flex justify-center" v-for="plan in planTypes" :key="plan">
 						<button :class="['plan-btn', { active: selectedPlanType === plan }]"
 							@click="selectedPlanType = plan">
 							{{ plan }}
@@ -70,7 +70,7 @@
 								</div>
 								<q-btn unelevated :loading="loading" no-caps class="plan-card__button"
 									@click="selectPlan(plan)">
-									Elegir este plan
+									Empieza ahora
 								</q-btn>
 							</div>
 						</q-carousel-slide>
@@ -86,12 +86,16 @@ import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useWalletStore } from '@/services/store/wallet.store';
 import { useStripeStore } from '@/services/store/stripe.store';
+import { useQuasar } from 'quasar';
 export default {
 	setup() {
 		const router = useRouter()
+		const q = useQuasar();
 		const paymentType = ref('annual')
-		const selectedPlanType = ref('Basico')
-		const planTypes = ['Gratis', 'Basico', 'Regular', 'Profesional']
+		const selectedPlanType = ref('Gratis')
+		// const planTypes = ['Gratis', 'Basico', 'Regular', 'Profesional']
+		const planTypes = ['Gratis'] // -- borrar este y colocar el de arriba
+
 		const slide = ref(1)
 		const loading = ref(false)
 		const { plans } = storeToRefs(useStripeStore())
@@ -121,9 +125,10 @@ export default {
 
 		const selectPlan = () => {
 			loading.value = true
-
+			console.log(filteredPlans.value[0].code)
 			const data = {
 				plan_id: filteredPlans.value[0].id,
+				plan_code: filteredPlans.value[0].code,
 				plan_payment: paymentType.value == 'annual' ? 1 : 2,
 				plant_type: selectedPlanType.value,
 				amount: filteredPlans.value[0][paymentType.value].price,
@@ -149,14 +154,24 @@ export default {
 			}, 2000);
 			walletStore.setPlanAndActivePlan(data)
 				.then((response) => {
+					if(response.code != 200) throw response
 					console.log(response)
 					router.push('/pay_link_landing_services')
 				}).catch((response) => {
 					console.log(response)
+					showNotify('negative', 'Error al intentar activar plan')
 				}).finally(() => loading.value = false)
 
 		}
-
+		const showNotify = (type, message) => {
+			q.notify({
+				message: message,
+				color: type,
+				actions: [
+				{ icon: 'eva-close-outline', color: 'white', round: true, handler: () => { /* ... */ } }
+				]
+			})
+			}
 		return {
 			paymentType,
 			selectedPlanType,
@@ -238,7 +253,7 @@ export default {
 	padding: 0.5rem 1.5rem;
 	border: 2px solid #e0e0e0;
 	border-radius: 0.7rem;
-	font-size: 1rem;
+	font-size: 1.5rem;
 	font-weight: 500;
 	width: 100%;
 	cursor: pointer;
@@ -416,7 +431,7 @@ export default {
 
 	.plan-btn {
 		padding: .5rem;
-		font-size: 0.7rem;
+		font-size: 1rem;
 	}
 
 	.payment-btn {

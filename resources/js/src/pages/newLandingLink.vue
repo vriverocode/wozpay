@@ -113,16 +113,17 @@
 import { defineComponent, onMounted } from 'vue'
 import phone from '@/assets/images/phone_link.png'
 import linkPhone from '@/assets/images/links_de_pagos.jpg'
+import { useRouter } from 'vue-router';
 export default defineComponent({
   name: 'NewLandingLink',
   setup() {
+    const router = useRouter()
     const handleStart = () => {
       // Aquí puedes agregar la lógica para navegar o abrir un modal
-      console.log('Comenzar a cobrar')
-      alert('BIENN, FALTA TERMINAR ESTE PROCESO')
+      goTo()
     }
     const goTo = () => {
-
+      router.push('/generatePayLink/0')
     }
     onMounted(() => {
       window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
