@@ -65,30 +65,25 @@
           </div>
         </div>
         <div class="q-mb-md">
-          <div class="q-mt-sm q-mb-md flex info_pay__Pay q-py-sm q-px-md  items-center " >
+          <div class="q-mt-sm q-mb-md flex info_pay__Pay q-py-sm q-px-md  items-center " v-if="route.params.type == 1 || route.params.type == 2 " >
             <div v-html="wozIcons.py" style="transform:scale(0.9)" v-if="route.params.type == 1 || route.params.type == 2 " />
             <div class="text-infoBlue text-weight-medium q-mx-sm">
                {{ 
                 route.params.type == 1 || route.params.type == 2 
                 ? 'Datos para el pago mediante transferencia bancaria SIPAP, copia y usa el alías '
-                : 'Paga seguro con Tpago de Bancard'
+                : ''
                }}
             </div> 
-            <div v-if="route.params.type != 1 && route.params.type != 2 ">
-              <img :src="payMethod2"  style="height: 1.3rem;" >
-            </div>
           </div>
           
           <!-- <div class="text-weight-bold">
             {{route.params.type != 2 &&  route.params.type != 1 ? 'Datos de tarjeta':'Datos para el pago'}}
           </div> -->
   
-          <div class="contet__border-primary q-px-md q-py-xs q-mt-xs q-pt-sm">
-            <div class="q-px-xl q-my-md flex flex-center q-pb-sm" v-if="route.params.type != 2 &&  route.params.type != 1 ">
-              <img :src="bancard" alt="" style="height: 1.7rem;" />
-            </div>
+          <div class="contet__border-primary q-pb-sm" style="overflow:hidden">
             <template v-if="route.params.type != 2 &&  route.params.type != 1 ">
-              <div v-for="(item ,key) in clientForm" :key="key" class="q-mt-md ">
+              <checkout />
+              <!-- <div v-for="(item ,key) in clientForm" :key="key" class="q-mt-md ">
                 <div class="q-px-xs text-bold q-pb-sm" v-if="item.title">
                   {{ item.title }}
                 </div>
@@ -117,7 +112,7 @@
                 <div class="q-px-xs q-pt-xs" v-if="item.sublabel">
                   {{ item.sublabel }}
                 </div>
-              </div>
+              </div> -->
             </template>
             <template v-else>
               <div class="q-px-md q-py-sm q-my-sm infoPay__content flex justify-between items-center" v-for="(item,key) in dataPay" :key="key">
@@ -156,17 +151,18 @@
                 </div>
               </div>
             </template>
-            <div class="q-px-xl q-my-md flex flex-center q-pb-sm">
-              <img :src="route.params.type == 1 || route.params.type == 2 ? payMethod : payMethod2" alt="" 
-              :style=" route.params.type == 1 || route.params.type == 2 ? 'height: 2.1rem;' : 'height: 2.5rem;' " >
-            </div>
+            <!-- <div class="q-px-xl q-my-md flex flex-center q-pb-sm">
+              <img :src="payMethod" alt="" 
+              :style="'height: 2.5rem;' " >
+            </div> -->
             <div v-if="formError" class="text-subtitle1 text-negative text-bold text-center q-mt-md flex flex-center">
               <q-icon name="eva-alert-circle-outline" color="negative" size="sm"/>
               {{ errorMessage }}
             </div>
           </div>
         </div>
-        <div class="linkPay_content q-px-md-xl q-pb-md" >
+        <div class="linkPay_content q-px-md-xl q-pb-md"
+        v-if="!(route.params.type != 2 && route.params.type != 1)" >
           <q-btn 
               color="primary" class="w-100 q-pa-npne q-mb-none linkPay_button" 
               no-caps
@@ -230,10 +226,12 @@
     isExpirationDateValid,
     getCreditCardNameByNumber,
   } from 'creditcard.js';
+  import checkout from '@/components/layouts/checkout.vue'
 
   export default {
     components: {
       doneModal,
+      checkout,
     },
     setup() {
       //vue provider

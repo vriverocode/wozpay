@@ -5,10 +5,10 @@
         <q-btn flat round color="white" size="xl" icon="eva-chevron-left-outline" @click="redirectToHome()" />
       </div>
       <div class="text-weight-bold text-h6 text-white w-100 text-center" >
-        {{ route.name == 'deposit_pay' ? 'Carga tu billetera' : route.query.title ??  title[link.type]}}
+        {{ route.name == 'deposit_pay' ? 'Carga tu billetera' : route.query.title ??  'Woz Payments'}}
       </div>
-      <div class="text-weight-bold text-subtitle1 text-white w-100 text-center q-mt-xs" >
-        {{ route.name == 'deposit_pay' ? 'Carga por transferencia' : route.query.subtitle ?? link.title}}
+      <div class="text-weight-bold text-subtitle1 text-white w-100 text-center q-mt-xs" v-if="route.name != 'form_pay_link'" >
+        {{ route.name == 'deposit_pay' ? 'Carga por transferencia' : route.query.subtitle ?? ''}}
       </div>
       <div class="boxNoVisible" style="position: absolute; right: 0%;">
         <transition name="inFade">
@@ -93,7 +93,7 @@
   height: 100%;
 }
 #topbarLayoutlink{
-  height: 11%;
+  height: 10%;
   width: 100%;
   // border-bottom: 1px solid lightgray;
 }

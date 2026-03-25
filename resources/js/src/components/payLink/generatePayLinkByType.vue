@@ -165,7 +165,12 @@
             <div class="flex justify-between items-center q-px-md q-mt-lg  text-subtitle1 q-mb-lg amount__items q-py-sm">
               <!-- <div class="q-py-xs">{{route.params.type == 0 ? 'Comisión Woz Pay 2%' : 'Comisión Woz Pay 12%'}}</div> -->
               
-              <div class="q-py-xs">Comisión Woz (15%)</div>
+              <div class="q-pb-xs q-pt-sm" style="line-height:1.1">
+                Comisión Woz Pay <br>
+                <span class="text-grey-7" style="font-size:0.8rem">
+                  Desde 3,9% a 15
+                </span>
+              </div>
               <div>
                - {{selectedCoin.code}} {{ 
                   !isNaN((parseInt(product.amount.replace(/\./g, ''),)*feedWoz)) 
@@ -244,7 +249,7 @@ export default {
     const linkStore = useLinkStore()
     const coinStore = useCoinStore()
     // const feedWoz = ref(route.params.type == 0 ? 0.02 : 0.12);
-    const feedWoz = ref(0.15);
+    const feedWoz = ref(0.039);
 
     const loading = ref(false)
     const done = ref(false)
@@ -475,8 +480,8 @@ export default {
       //           ? numberFormat((parseInt(product.value.amount.replace(/\./g, '') - parseInt(product.value.amount.replace(/\./g, ''))*0.12) )- (7800/selectedCoin.value.rate) )
       //           : 0
 
-      product.value.to_client = !isNaN((parseInt(product.value.amount.replace(/\./g, ''),)*0.15)) 
-                ? numberFormat((parseInt(product.value.amount.replace(/\./g, '') - parseInt(product.value.amount.replace(/\./g, ''))*0.15) - 6900  ) ) 
+      product.value.to_client = !isNaN((parseInt(product.value.amount.replace(/\./g, ''),)*feedWoz.value)) 
+                ? numberFormat((parseInt(product.value.amount.replace(/\./g, '') - parseInt(product.value.amount.replace(/\./g, ''))*feedWoz.value) - 6900  ) ) 
                 : 0
     }
     onMounted(() => {

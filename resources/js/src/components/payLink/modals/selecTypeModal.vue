@@ -2,7 +2,9 @@
     <q-dialog v-model="dialog" persistent transition-show="scale" transition-hide="scale" class="doneLoan"> 
         <q-card class="bg-white  flex flex-center q-py-md" style="width: 100%; height: 100%">
           <q-card-section class="q-py-none flex column flex-center">
-            Modal de seleccion
+            <div>
+
+            </div>
           </q-card-section>
         </q-card>
       </q-dialog>
@@ -19,6 +21,9 @@
         //vue provider
         const dialog = ref(props.dialog);
         const icons = inject('ionIcons')
+        const options = [
+            
+        ]
   
         watch(() => props.dialog, (newValue) => {
           dialog.value = newValue
