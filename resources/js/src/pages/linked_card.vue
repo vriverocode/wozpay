@@ -16,11 +16,14 @@
       <q-form id="linked_form" class="" @submit="linkCard()">
         <div class="q-px-md-xl q-px-md">
           <div class="q-pb-xs q-pt-sm q-px-md q-px-md-lg card_form q-mt-md">
-            <div class="flex flex-center">
-              <q-icon :name="icons.outlinedAddCard" size="lg" color="primary" />
+            <div class="text-center q-pt-sm">
+              <img :src="dots" alt="" style="width: 3.2rem; margin: auto;">
+              <div class="q-my-md text__debit">
+                Debitaremos las cuotas de ésta tarjeta
+              </div>
             </div>
-            <div class="q-px-md text-center q-py-sm q-mt-sm infoCard text-subtitle2">
-              Te debitaremos una tarifa 3,3 USD para <br> validar la tarjeta
+            <div class="q-px-md text-center q-py-sm q-mt-sm infoCard ">
+              Te debitaremos una tarifa 5,5 USD <br> para validar la tarjeta
             </div>
             <div class="q-my-lg">
               <q-input class="linkedCard q-pb-none" outlined clearable :clear-icon="'eva-close-outline'"
@@ -59,23 +62,51 @@
             </div>
           </div>
         </div>
-        <div class="q-px-lg q-mt-lg q-px-md-xl q-mx-md-xl">
+        <div class="q-px-md q-mt-md q-px-md-xl q-mx-md-lg">
+          <div class="flex items-center q-px-md-md q-px-sm">
+            <div class="text__securepay q-pt-xs">
+              Pago seguro Woz Payments
+            </div>
+            <q-icon name="eva-lock-outline" size="sm" class="q-ml-xs" color="primary" />
+          </div>
+          <div class="flex items-center q-px-md-sm q-pt-xs">
+            <q-checkbox class="terms-checkboxCard " v-model="formCardData.accept_terms" color="primary" size="md"
+              :rules="rulesForm('terms')" />
+            <a href="https://wozpayments.com/public/documents/TERMINOS_Y_CONDICIONES.pdf" target="_blank"
+              style="width: 85%;">
+              <div class="text__temrs " style="width: 100%;">
+                Acepto los terminos y condiciones
+              </div>
+            </a>
+          </div>
+        </div>
+        <div class="q-px-sm q-mt-md q-px-md-xl q-mx-md-lg">
+          <div class="flex items-center q-px-md-md autodebit_section justify-between ">
+            <div class="text__autodebit ">
+              Débitar automaticamente las cuota
+            </div>
+            <van-switch v-model="formCardData.is_autodebit" size="1.3rem" />
+          </div>
+        </div>
+        <div class="q-px-sm q-mt-lg q-px-md-xl q-mx-md-lg">
           <q-btn color="primary" class="w-100 q-pa-npne q-mb-none  link_button" no-caps type="submit"
             :loading="loading">
-            <div class="text-white q-py-sm text-subtitle1 text-weight-medium flex justify-center items-stretch">
+            <div class="text-white q-py-sm  flex justify-center items-center">
               <div class="q-mt-xs">
                 Adjuntar tarjeta
               </div>
-              <q-icon name="eva-lock-outline" size="sm" class="q-ml-xs q-mt-xs" />
+              <q-icon name="eva-lock-outline" size="sm" class="q-ml-xs " />
             </div>
             <template v-slot:loading>
               <q-spinner-facebook />
             </template>
           </q-btn>
-          <div class="q-px-sm q-mt-sm">
-            Te debitaremos una pequeña tarifa para validar la tarjeta.
+          <div class="q-px-sm q-mt-sm text-center text__bottom_comision">
+            Asegúrate de contar con al menos 5,5 USD en tu tarjeta
+            para la validación. Monto reembolsado en el prestamo
           </div>
         </div>
+
       </q-form>
       <div class="q-mt-lg q-px-md q-px-md-xl q-pb-xl">
         <div class="q-px-md-xl q-pb-sm">
@@ -117,6 +148,7 @@ import { useRoute, useRouter } from 'vue-router'
 import payMethod from '@/assets/images/pay_types3.png'
 import doneModal from '@/components/layouts/modals/doneModal.vue';
 import wozIcons from '@/assets/icons/wozIcons'
+import dots from '@/assets/images/dots.png'
 import { getCreditCardType } from 'cleave-zen'
 import {
   isValid,
@@ -155,13 +187,15 @@ export default {
       type: options[parseInt(route.params.id_card) - 1],
       due_date: '',
       cvc: '',
+      accept_terms: false,
+      is_autodebit: true,
     })
 
     // Data
 
     const linkCard = () => {
       if (!validate()) {
-        showNotify('negative', 'Debe completar el formulario')
+        showNotify('negative', 'Debes completar el formulario')
         return
       }
       loadingState(true)
@@ -195,7 +229,12 @@ export default {
         isOk = false
         return isOk
       }
-
+      if (formCardData.value.accept_terms == false) {
+        showNotify('negative', 'Debes aceptar los terminos y condiciones para continuar')
+      }
+      if (formCardData.value.is_autodebit == false) {
+        isOk = true
+      }
       return isOk
     }
     const showNotify = (type, message) => {
@@ -226,6 +265,10 @@ export default {
           val => val.length >= 3 || "Minimo 3 digitos.",
 
           val => (/[a-zA-z,%"' ();&|<>]/.test(val) == false) || "Se permiten solo valores numericos",
+        ],
+        terms: [
+          val => (val !== false) || 'Debes aceptar los terminos y condiciones.',
+
         ],
       }
 
@@ -302,6 +345,7 @@ export default {
       options,
       loading,
       showDialog,
+      dots,
       cardType,
       wozIcons,
       cleaveCard,
@@ -317,9 +361,20 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.text__securepay {
+  color: #0449fa;
+}
+
+
+
 .warning-info-content {
   border: 1px solid #ffc701 !important;
   border-radius: 1.5rem;
+}
+
+.text__bottom_comision {
+  font-size: .85rem;
+  color: #0449fa;
 }
 
 .info-title {
@@ -342,6 +397,8 @@ export default {
 .infoCard {
   background-color: #cfdcfe;
   border-radius: 15px;
+  font-size: 0.88rem;
+  font-weight: 400;
 }
 
 .package-back {
@@ -358,6 +415,11 @@ export default {
   bottom: 15%;
   left: 18%;
   transform: scale(1.5);
+}
+
+.text__debit {
+  font-size: 0.99rem;
+  font-weight: bold;
 }
 
 .package-back:nth-child(3) {
@@ -396,6 +458,21 @@ export default {
 }
 </style>
 <style lang="scss">
+.autodebit_section {
+  border: 1px solid lightgray;
+  border-radius: 0.6rem;
+  padding: 0.8rem 1rem;
+}
+
+.text__autodebit {
+  font-size: 0.98rem;
+}
+
+.terms-checkboxCard {
+  width: 6%;
+
+}
+
 .text-decoration-underline {
   text-decoration: underline;
 }
@@ -460,7 +537,19 @@ export default {
   position: relative;
 }
 
+.text__temrs {
+  font-size: 0.97rem;
+}
+
 @media screen and (max-width: 780px) {
+  .terms-checkboxCard {
+    width: 12%;
+  }
+
+  .text__autodebit {
+    font-size: 0.91rem;
+  }
+
   .linkedCard {
     & .q-field__bottom {
       transform: translateY(15px);

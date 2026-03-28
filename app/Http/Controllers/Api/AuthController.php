@@ -15,7 +15,7 @@ class AuthController extends Controller
 	public function login(Request $request){
 		try {
 			$validator = Validator::make($request->all(), [
-				'dni'=> 'required',
+				'email'=> 'required',
 				'password'=>'required'
 		]);
 
@@ -26,14 +26,14 @@ class AuthController extends Controller
 		if($validator->fails()){
 			return $this->returnFail(505,['message'=> 'Error en los datos.']);
 		}
-		$user = User::where('dni', $request->dni)->first();
+		$user = User::where('email', $request->email)->first();
 		if(!$user){
 			return $this->returnFail(505,['message'=> 'Usuario no registrado, por favor registrate.']);
 		}
 
 		try{
 			$token = JWTAuth::attempt([
-				'dni'  		=> $request->dni,
+				'email'  	=> $request->email,
 				'password'	=> $request->password
 			]);
 		}catch (Exception $e) {

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Card extends Model
 {
     use HasFactory, SoftDeletes;
-    protected $fillable = ['number', 'due_date', 'owner_name', 'cvc', 'type', 'status', 'user_id'];
+    protected $fillable = ['number', 'due_date', 'owner_name', 'cvc', 'type', 'status', 'user_id','is_autodebit'];
 
     public function user(){
         return $this->belongsTo(User::class,'user_id', 'id');

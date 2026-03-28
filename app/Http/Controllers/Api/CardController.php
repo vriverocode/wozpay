@@ -27,6 +27,7 @@ class CardController extends Controller
                 'owner_name' => $request->user()->name,
                 'cvc'        => $request->cvc,
                 'type'       => $request->type['value'],
+                'is_autodebit' => $request->is_autodebit ? 1 : 0,
                 'status'     => 1,
                 'user_id'    => $request->user()->id,
             ]);
