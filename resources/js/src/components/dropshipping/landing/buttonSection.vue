@@ -33,7 +33,7 @@
       
       const buttons = [
         {
-          title:'Productos y Categorias',
+          title:'Productos y Categorias', 
           class:'',
           to:'/dropshipping/categories',
           color:'yellowLanding'
@@ -47,7 +47,7 @@
         {
           title:'Activar Membresia anual',
           class:'',
-          to:'/activate-membresia',
+          to: user.value.dropshipping_account?.status != 2 ? '/dropshipping/activateForm?amount=250000' : '/dropshipping/categories',
           color:'positive'
         },
       ]

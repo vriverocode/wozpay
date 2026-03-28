@@ -1,200 +1,223 @@
 <template>
   <div class="layout-dasboard__content" style="">
-    <div id="linkGenerateContent">
-      <div class="hero-content q-px-md q-pt-lg q-px-md-sm" transition-style="in:circle:center" :style="'background:'+header.color" >
-        <div class=" q-px-md-lg hero-content_title" transition-style="in:circle:center" :style="'background:'+header.color" >
-          <div class="text-h4 text-white text-weight-bold  text-font-roboto"  style="font-size: 2.3rem;">
-            {{ header.title }}
-          </div>
-          <div class="text-subtitle1 text-white q-mt-sm text-weight-medium text-font-roboto">
-            {{ header.subtitle }}
-          </div>
-          <div class="q-pb-md flex items-center">
-            <q-linear-progress rounded size="15px"  track-color="white"  :value="countLink/limit()" :color="header.track" class="q-mt-sm totalLink_progress" />
-            <div class="q-mt-sm q-px-sm text-subtitle1 text-bold text-white">{{  countLink }} / {{ limit() }}</div>
-          </div>
-        </div>
-      </div> 
-      <div>
-        <div class="q-px-md q-mt-lg">
-          <q-select 
-            outlined 
-            option-value="id" 
-            option-label="name" 
-            v-model="selectedOption" 
-            :options="optionsLink"  
-            :clear-icon="'eva-close-outline'"
-            dropdown-icon="eva-chevron-down-outline"
-            behavior="menu"
-            color="positive"
-            class="linkPaySelectType" 
-            @update:model-value="updateType()"
-          />
-        </div>
-        <div class="q-px-md q-mt-md">
-          <div class="text-subtitle1 text-weight-bold text-blue-grey-10"> 
-            Crea un link para ventas
-          </div>
-          <div class=" text-blue-grey-9  q-mt-sm text-weight-light flex items-end q-mr-none" style="font-size: 0.88rem;"> 
-            <div>
-              Disponible para cobros de servicios internacionales 
+    <div class="w-full">
+      <div id="linkGenerateContent">
+        <div class="hero-content q-px-md q-pt-lg q-px-md-sm" transition-style="in:circle:center" :style="'background:'+header.color" >
+          <div class="q-pb-md q-px-md-lg hero-content_title" transition-style="in:circle:center" :style="'background:'+header.color" >
+            <div class="text-h4 text-white text-weight-bold  text-font-roboto"  style="font-size: 2.3rem;">
+              {{ header.title }}
             </div>
-            <q-icon name="eva-checkmark-circle-2-outline" color="positive" size="1.3rem" class=" q-ml-xs" style="margin-top: -5px;"/>
+            <div class="text-subtitle1 text-white q-mt-sm  text-font-roboto" style="font-weight:bold">
+              {{ header.subtitle }}
+            </div>
+            <!-- <div class="q-pb-md flex items-center">
+              <q-linear-progress rounded size="15px"  track-color="white"  :value="countLink/limit()" :color="header.track" class="q-mt-sm totalLink_progress" />
+              <div class="q-mt-sm q-px-sm text-subtitle1 text-bold text-white">{{  countLink }} / {{ limit() }}</div>
+            </div> -->
           </div>
-        </div>
-        <div class="q-px-md q-mt-md">
-          <div>
-            <q-input
-              class="linkPaySelectType2"
-              outlined
-              clearable
-              :clear-icon="'eva-close-outline'"
-              color="positive"
-              v-model="product.name"
-              label="Nombre del producto"
-              :rules="rulesForm('name')"
-              autocomplete="off"
-            />
-          </div>
-          <div class=" linkPaySelectType q-mb-sm q-mt-xs q-pb-xs">
+        </div> 
+        <div>
+          <div class="q-px-md q-mt-lg">
             <q-select 
               outlined 
               option-value="id" 
               option-label="name" 
-              label="Selecciona la moneda"
-              v-model="selectedCoin" 
-              :options="optionCoin"  
+              v-model="selectedOption" 
+              :options="optionsLink"  
               :clear-icon="'eva-close-outline'"
               dropdown-icon="eva-chevron-down-outline"
               behavior="menu"
               color="positive"
-              :hint="selectedCoin.id == 1 ?'' : '1 USD ≈ ' +'Gs.'+ numberFormat(selectedCoin.rate) "
               class="linkPaySelectType" 
               @update:model-value="updateType()"
-            />
+            >
+              <template v-slot:option="scope">
+                <q-item v-bind="scope.itemProps" class="q-mb-sm">
+                  <q-item-section>
+                    <q-item-label>{{ scope.opt.name }}</q-item-label>
+                    <q-item-label caption>{{ scope.opt.description }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </template>
+            </q-select>
           </div>
-          <div v-if="selectedOption.id == 2" class="q-mt-sm q-pb-md">
-            <q-input
-              class="linkPaySelectType2"
-              outlined
-              clearable
-              :clear-icon="'eva-close-outline'"
-              color="positive"
-              v-model="product.initDay"
-              label="Fecha de inicio de cobro mensual"
-              mask="##/##/####"
-              autocomplete="off"
-              hint="Formato: DD/MM/YYYY"
-            />
+          <div class="q-px-md q-mt-md">
+            <div class="text-subtitle1 text-weight-bold text-blue-grey-10"> 
+              Crea un link para ventas
+            </div>
+            <div class=" text-blue-grey-9  q-mt-sm text-weight-light flex items-end q-mr-none" style="font-size: 0.88rem;"> 
+              <div>
+                Disponible para cobros de servicios internacionales 
+              </div>
+              <q-icon name="eva-checkmark-circle-2-outline" color="positive" size="1.3rem" class=" q-ml-xs" style="margin-top: -5px;"/>
+            </div>
           </div>
-          <div v-if="selectedOption.id == 2" class="q-mt-sm q-pb-md">
-            <q-input
-              class="linkPaySelectType2"
-              outlined
-              clearable
-              :clear-icon="'eva-close-outline'"
-              color="positive"
-              v-model="product.forMonth"
-              label="Cobrar durante X meses"
-              autocomplete="off"
-              type="number"
-            />
+          <div class="q-px-md q-mt-md">
+            <div>
+              <q-input
+                class="linkPaySelectType2"
+                outlined
+                clearable
+                :clear-icon="'eva-close-outline'"
+                color="positive"
+                v-model="product.name"
+                label="Nombre del producto"
+                :rules="rulesForm('name')"
+                autocomplete="off"
+              />
+            </div>
+            <div class=" linkPaySelectType q-mb-sm q-mt-xs q-pb-xs">
+              <q-select 
+                outlined 
+                option-value="id" 
+                option-label="name" 
+                label="Selecciona la moneda"
+                v-model="selectedCoin" 
+                :options="optionCoin"  
+                :clear-icon="'eva-close-outline'"
+                dropdown-icon="eva-chevron-down-outline"
+                behavior="menu"
+                color="positive"
+                :hint="selectedCoin.id == 1 ?'' : '1 USD ≈ ' +'Gs.'+ numberFormat(selectedCoin.rate) "
+                class="linkPaySelectType" 
+                @update:model-value="updateType()"
+              />
+            </div>
+            <div v-if="selectedOption.id == 2" class="q-mt-sm q-pb-md">
+              <q-input
+                class="linkPaySelectType2"
+                outlined
+                clearable
+                :clear-icon="'eva-close-outline'"
+                color="positive"
+                v-model="product.initDay"
+                label="Fecha de inicio de cobro mensual"
+                mask="##/##/####"
+                autocomplete="off"
+                hint="Formato: DD/MM/YYYY"
+              />
+            </div>
+            <div v-if="selectedOption.id == 2" class="q-mt-sm q-pb-md">
+              <q-input
+                class="linkPaySelectType2"
+                outlined
+                clearable
+                :clear-icon="'eva-close-outline'"
+                color="positive"
+                v-model="product.forMonth"
+                label="Cobrar durante X meses"
+                autocomplete="off"
+                type="number"
+              />
+            </div>
+            <!-- <div v-if="selectedOption.id == 2" class="q-mt-sm q-pb-md">
+              <q-select 
+                outlined 
+                v-model="product.forMonth" 
+                :options="daysAvaibles()"  
+                clearable
+                :clear-icon="'eva-close-outline'"
+                dropdown-icon="eva-chevron-down-outline"
+                behavior="menu"
+                label="Día de cobro"
+                color="positive"
+                class="linkPaySelectType" 
+                @update:model-value="updateType()"
+              />
+            </div> -->
+            <div class="q-mt-sm">
+              <q-input
+                class="linkPaySelectType2"
+                outlined
+                clearable
+                :clear-icon="'eva-close-outline'"
+                color="positive"
+                v-model="product.amount"
+                :label="selectedCoin.id == 1 ?'Precio en Gs.':'Precio en dolares'"
+                mask="###.###.###"
+                reverse-fill-mask
+                :rules="rulesForm('amount')"
+                autocomplete="off"
+                @keyup="totalToClient()"
+              />
+            </div>
+            <div class="q-mt-sm">
+              <q-input
+                class="linkPaySelectType2"
+                outlined
+                clearable
+                :clear-icon="'eva-close-outline'"
+                color="positive"
+                v-model="product.details"
+                label="Agregar detalles"
+                :rules="rulesForm('description')"
+                autocomplete="off"
+              />
+            </div>
+            
           </div>
-          <!-- <div v-if="selectedOption.id == 2" class="q-mt-sm q-pb-md">
-            <q-select 
-              outlined 
-              v-model="product.forMonth" 
-              :options="daysAvaibles()"  
-              clearable
-              :clear-icon="'eva-close-outline'"
-              dropdown-icon="eva-chevron-down-outline"
-              behavior="menu"
-              label="Día de cobro"
-              color="positive"
-              class="linkPaySelectType" 
-              @update:model-value="updateType()"
-            />
-          </div> -->
-          <div class="q-mt-sm">
-            <q-input
-              class="linkPaySelectType2"
-              outlined
-              clearable
-              :clear-icon="'eva-close-outline'"
-              color="positive"
-              v-model="product.amount"
-              :label="selectedCoin.id == 1 ?'Precio en Gs.':'Precio en dolares'"
-              mask="###.###.###"
-              reverse-fill-mask
-              :rules="rulesForm('amount')"
-              autocomplete="off"
-              @keyup="totalToClient()"
-            />
+          <div class="q-px-md q-mt-md">
+            <div class="text-subtitle1 text-weight-bold text-blue-grey-10"> 
+              Woz Pay te informa que éstas son las comisiones a ser descontadas
+            </div>
           </div>
-          <div class="q-mt-sm">
-            <q-input
-              class="linkPaySelectType2"
-              outlined
-              clearable
-              :clear-icon="'eva-close-outline'"
-              color="positive"
-              v-model="product.details"
-              label="Agregar detalles"
-              :rules="rulesForm('description')"
-              autocomplete="off"
-            />
+          <div class="q-px-md">
+            <div class="flex justify-between items-center q-px-md q-mt-lg  text-subtitle1 q-mb-lg amount__items q-py-sm">
+              <!-- <div class="q-py-xs">{{route.params.type == 0 ? 'Comisión Woz Pay 2%' : 'Comisión Woz Pay 12%'}}</div> -->
+              
+              <div class="q-pb-xs q-pt-sm" style="line-height:1.1">
+                Comisión Woz Pay <br>
+                <span class="text-grey-7" style="font-size:0.8rem">
+                  Desde 3,9% a 15
+                </span>
+              </div>
+              <div>
+               - {{selectedCoin.code}} {{ 
+                  !isNaN((parseInt(product.amount.replace(/\./g, ''),)*feedWoz)) 
+                  ? numberFormat((parseInt(product.amount.replace(/\./g, ''))*feedWoz))
+                  : 0
+                }}
+              </div>
+            </div>
+            <div class="flex justify-between items-center q-px-md q-mt-lg  text-subtitle1 q-mb-lg amount__items q-py-sm">
+              <div class="q-py-xs">Tarifa fija</div>
+              <div>
+               - {{selectedCoin.code}} {{numberFormatDecimal(6900/selectedCoin.rate) }}
+
+                <!-- {{selectedCoin.code}} {{ route.params.type == 0 ? '0' : numberFormatDecimal(7800/selectedCoin.rate) }} -->
+              </div>
+            </div>
+            <div class="flex justify-between items-center q-px-md q-mt-lg text-weight-bold text-subtitle1 q-mb-lg amount__items q-py-sm">
+              <div class="q-py-xs">Total a cobrar</div>
+              <div>
+                {{selectedCoin.code}}
+                {{  product.to_client }}
+              </div>
+            </div>
           </div>
-          
         </div>
-        <div class="q-px-md q-mt-md">
-          <div class="text-subtitle1 text-weight-bold text-blue-grey-10"> 
-            Woz Pay te informa que éstas son las comisiones a ser descontadas
-          </div>
-        </div>
-        <div class="q-px-md">
-          <div class="flex justify-between items-center q-px-md q-mt-lg  text-subtitle1 q-mb-lg amount__items q-py-sm">
-            <div class="q-py-xs">{{route.params.type == 0 ? 'Comisión Woz Pay 2%' : 'Comisión Woz Pay 12%'}}</div>
-            <div>
-              {{selectedCoin.code}} {{ 
-                !isNaN((parseInt(product.amount.replace(/\./g, ''),)*feedWoz)) 
-                ? numberFormat((parseInt(product.amount.replace(/\./g, ''))*feedWoz))
-                : 0
-              }}
-            </div>
-          </div>
-          <div class="flex justify-between items-center q-px-md q-mt-lg  text-subtitle1 q-mb-lg amount__items q-py-sm">
-            <div class="q-py-xs">Comision por transacción</div>
-            <div>
-              {{selectedCoin.code}} {{ route.params.type == 0 ? '0' : numberFormatDecimal(7800/selectedCoin.rate) }}
-            </div>
-          </div>
-          <div class="flex justify-between items-center q-px-md q-mt-lg text-weight-bold text-subtitle1 q-mb-lg amount__items q-py-sm">
-            <div class="q-py-xs">Total a cobrar</div>
-            <div>
-              {{selectedCoin.code}}
-              {{  product.to_client }}
-            </div>
-          </div>
+        <div class="q-px-md q-pb-lg">
+          <q-btn 
+            :loading="loading"
+            unelevated
+            no-caps 
+            color="terciary" 
+            class="full-width q-pa-sm" 
+            @click="createLink"
+            :disable="countLink >= limit()"
+          >
+            <template v-slot:loading>
+              <q-spinner-facebook />
+            </template>
+            <div class="q-py-xs">Generar link de pago</div>
+          </q-btn>
         </div>
       </div>
-      <div class="q-px-md q-pb-lg">
-        <q-btn 
-          :loading="loading"
-          unelevated
-          no-caps 
-          color="terciary" 
-          class="full-width q-pa-sm" 
-          @click="createLink"
-          :disable="countLink >= limit()"
-        >
-          <template v-slot:loading>
-            <q-spinner-facebook />
-          </template>
-          <div class="q-py-xs">Generar link de pago</div>
-        </q-btn>
-      </div>
+      <doneModal :dialog="done"/>
+      <!-- <selectypeModal -->
+       <selecTypeModalVue :dialog="dialogType" />
     </div>
-    <doneModal :dialog="done"/>
+
   </div>
 </template>
 <script>
@@ -208,10 +231,13 @@
   import { storeToRefs } from 'pinia';
   import { useAuthStore } from '@/services/store/auth.store';
   import { useCoinStore } from '@/services/store/coin.store';
+  import selecTypeModalVue from '@/components/payLink/modals/selecTypeModal.vue';
+  
 
 export default {
   components: {
-    doneModal
+    doneModal,
+    selecTypeModalVue
   },
   setup() {
     const { user } = storeToRefs(useAuthStore())
@@ -222,9 +248,12 @@ export default {
     const numberFormatDecimal = util.numberFormatDecimal
     const linkStore = useLinkStore()
     const coinStore = useCoinStore()
-    const feedWoz = ref(route.params.type == 0 ? 0.02 : 0.12);
+    // const feedWoz = ref(route.params.type == 0 ? 0.02 : 0.12);
+    const feedWoz = ref(0.039);
+
     const loading = ref(false)
     const done = ref(false)
+    const dialogType = ref(false)
     const countLink = ref(0)
     const product = ref({
       name:'',
@@ -235,16 +264,21 @@ export default {
       forMonth:1
     })
     const title = [
-      
       {
-        title:'Links de cortesía',
-        subtitle:'Sólo puedes generar una cantidad de 6 links en la versión gratuita',
-        color:'#ffc701',
+        title:'Links de pago',
+        subtitle:'Puedes generar todos los links de para transacciones mayores a Gs. 100.000 o su equivalente en USD ' ,
+        color:'#19cd15',
         track: 'primary'
       },
+      // {
+      //   title:'Links de cortesía',
+      //   subtitle:'Sólo puedes generar una cantidad de 6 links en la versión gratuita',
+      //   color:'#ffc701',
+      //   track: 'primary'
+      // },
       {
         title:'Links ilimitados',
-        subtitle:'Puedes generar todos los lins de manera ilimitada',
+        subtitle:'Puedes generar todos los links de manera ilimitada',
         color:'#19cd15',
         track: 'white'
       },
@@ -284,15 +318,18 @@ export default {
       },
       {
         id:4,
-        name:'Ventas'
+        name:'Venta de producto',
+        description: 'Cobro único por productos o servicios individuales'
       },
       {
         id:2,
-        name:'Membresías'
+        name:'Suscripción recurrente', 
+        description:'Cobro automático mensual para servicios continuos'
       },
       {
         id:3,
-        name:'Freelancers'
+        name:'Servicios profesional',
+        description:'Facturación por proyectos o trabajos freelance'
       },
     ]
     const optionCoin = ref([])
@@ -360,10 +397,14 @@ export default {
         showNotify('negative', 'Debes completar el formulario')
         return
       }
-      if(countLink.value >= limit()){
-        showNotify('negative', 'Alcanzaste el maximo de tus links, adquiere un paquete')
+      if (product.value.to_client <=0) {
+        showNotify('negative', 'El monto debe ser mayor a 0')
         return
       }
+      // if(countLink.value >= limit()){
+      //   showNotify('negative', 'Alcanzaste el maximo de tus links, adquiere un paquete')
+      //   return
+      // }
       loading.value = true
       const data = {
         note:   product.value.details,
@@ -433,10 +474,14 @@ export default {
       return [free, '', member, freelance, sell,]
     }
     const totalToClient  = () => {
-      product.value.to_client = route.params.type == 0 && !isNaN((parseInt(product.value.amount.replace(/\./g, ''),)*0.02)) 
-                ? numberFormat((parseInt(product.value.amount.replace(/\./g, '') - parseInt(product.value.amount.replace(/\./g, ''))*0.02)))
-                : !isNaN((parseInt(product.value.amount.replace(/\./g, ''),)*0.12) ) 
-                ? numberFormat((parseInt(product.value.amount.replace(/\./g, '') - parseInt(product.value.amount.replace(/\./g, ''))*0.12) )- (7800/selectedCoin.value.rate) )
+      // product.value.to_client = route.params.type == 0 && !isNaN((parseInt(product.value.amount.replace(/\./g, ''),)*0.02)) 
+      //           ? numberFormat((parseInt(product.value.amount.replace(/\./g, '') - parseInt(product.value.amount.replace(/\./g, ''))*0.02)))
+      //           : !isNaN((parseInt(product.value.amount.replace(/\./g, ''),)*0.12) ) 
+      //           ? numberFormat((parseInt(product.value.amount.replace(/\./g, '') - parseInt(product.value.amount.replace(/\./g, ''))*0.12) )- (7800/selectedCoin.value.rate) )
+      //           : 0
+
+      product.value.to_client = !isNaN((parseInt(product.value.amount.replace(/\./g, ''),)*feedWoz.value)) 
+                ? numberFormat((parseInt(product.value.amount.replace(/\./g, '') - parseInt(product.value.amount.replace(/\./g, ''))*feedWoz.value) - 6900  ) ) 
                 : 0
     }
     onMounted(() => {
@@ -461,6 +506,7 @@ export default {
       selectedOption,
       product,
       numberFormat,
+      dialogType,
       numberFormatDecimal,
       rulesForm,
       updateType,

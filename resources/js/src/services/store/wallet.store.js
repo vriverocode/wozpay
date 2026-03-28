@@ -42,8 +42,8 @@ export const useWalletStore = defineStore("wallet", {
               throw data;
             }
             resolve(data)
-          }).catch((response) => {
-            console.log(response)
+          }).catch(({response}) => {
+            console.log(response.data)
             resolve('Error al obtener.');
           });
         }

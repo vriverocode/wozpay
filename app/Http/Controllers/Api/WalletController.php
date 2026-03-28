@@ -46,7 +46,7 @@ class WalletController extends Controller
             $plan = $this->getPlansID($request->plan_code);
             $wallet = $this->activateLinkWallet($request);
             $user = User::find($request->user()->id)->update([
-                'plan_id' => $plan->id,
+                'plan_id' => $plan ? $plan->id : $request->plan_id,
                 'plan_expiration_date' => $this->expirationDatePlan($plan->id, $request->payment_type),
             ]);
 

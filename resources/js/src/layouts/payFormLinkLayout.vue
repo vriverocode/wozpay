@@ -78,7 +78,7 @@
 
 <style lang="scss" scoped>
 .container_paget{
-  height: 89%;
+  height: 91%;
   overflow-y: hidden;
 
 }
@@ -100,8 +100,8 @@
   background: white;
   height: 100%;
   width: 100%;
-  border-top-left-radius: 50px;
-  border-top-right-radius: 50px;
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
   overflow: hidden;
 }
 </style>

@@ -19,7 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://10.10.10.69:8046', 'http://192.168.1.229:8022', 'http://192.168.1.229:8021', 'http://192.168.31.20:8021'],
+    'allowed_origins' => ['http://10.10.10.69:8046', 'http://192.168.1.229:8022', 'http://192.168.1.198:8021'],
 
     'allowed_origins_patterns' => [],
 

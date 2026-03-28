@@ -125,6 +125,15 @@
                   >
                   </q-btn>
                 </div>
+                <div class=" q-mt-sm q-px-md-xl q-mx-md-xl">
+                  <q-btn 
+                    color="primary" flat class="w-100" 
+                    no-caps
+                    label="Volver al inicio"
+                    @click="router.go(-3)"
+                  >
+                  </q-btn>
+                </div>
               </template>
             </div>
           </div>

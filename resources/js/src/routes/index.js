@@ -60,7 +60,7 @@ const router = createRouter({
         },
         {
             path: "/generatePayLink/:type",
-            name: "generatePayLinkccc",
+            name: "generatePayLinkNew",
             beforeEnter: auth,
             component: () => import("@/pages/generatePayLink.vue"),
             meta: {
@@ -896,7 +896,7 @@ const router = createRouter({
         },
         {
             path: "/dropshipping/activateForm",
-            name: "generatePayLink",
+            name: "generatePayLinkd",
             beforeEnter: auth,
             component: () => import("@/pages/dropshipping/payActivation.vue"),
             meta: {

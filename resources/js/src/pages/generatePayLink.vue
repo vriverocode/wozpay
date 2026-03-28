@@ -39,6 +39,8 @@ export default {
       card: user.value.card  ?? false,
       current: user.value.current_loan ?? false,
       loan:user.value.loans_complete_count ?? false,
+      bankAccount:user.value.loans_complete_count ?? false,
+
     })
     const showNotReady = ref(true)
     const load = ref(false)
@@ -56,6 +58,8 @@ export default {
     onMounted(() => {
       useQuasar().addressbarColor.set(colorBanner.value)
       validateToShow()
+
+      console.log(requirements.value)
       
     })
     return {

@@ -56,8 +56,8 @@
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi"
         ],
-        "dev": [
-            "@php artisan serve --host 10.10.10.69 --port 8020"
+        "dev":[
+            "@php artisan serve --host 192.168.1.198 --port 8020"
         ],
         "dev-home": [
             "@php artisan serve --host 192.168.31.20 --port 8020"

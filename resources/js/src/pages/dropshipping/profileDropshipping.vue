@@ -29,7 +29,7 @@
       </div>
       <q-btn color="positive" @click="goTo()" text-color="white" label="" no-caps id="" class="q-mt-lg" >
         <div class="q-py-sm">
-          Comezar a vender
+          Comenzar a vender
         </div>  
       </q-btn>
 

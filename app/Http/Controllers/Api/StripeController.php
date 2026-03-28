@@ -14,35 +14,41 @@ class StripeController extends Controller
      */
     public function createSetupIntent(Request $request)
     {
-       
-
-
-
         try {
             $user = $request->user();
             $user->createOrGetStripeCustomer();
+            
             $intent = $user->createSetupIntent([
                 'payment_method_types' => ['card'],
             ]);
             
+            // 1. Retornamos el éxito INMEDIATAMENTE si todo salió bien.
+            return $this->returnSuccess(200, [
+                'client_secret' => $intent->client_secret
+            ]);
+            
         } catch (\Stripe\Exception\InvalidRequestException $e) {
-  
+            
             if ($e->getStripeCode() === 'resource_missing') {
                 $user->stripe_id = null;
                 $user->save();
                 $user = $request->user();
                 $user->createOrGetStripeCustomer();
+                
                 $intent = $user->createSetupIntent([
                     'payment_method_types' => ['card'],
                 ]);
-                return $this->returnSuccess(200,
-                    ['client_secret' => $intent->client_secret]
-                );
+                
+                return $this->returnSuccess(200, [
+                    'client_secret' => $intent->client_secret
+                ]);
             }
+            
+            return $this->returnFail(500, 'Error de Stripe: ' . $e->getMessage());
+            
+        } catch (\Exception $e) {
+            return $this->returnFail(500, 'Error del servidor: ' . $e->getMessage());
         }
-        return $this->returnSuccess(200,
-            ['client_secret' => $intent->client_secret]
-        );
     }
 
     /**
