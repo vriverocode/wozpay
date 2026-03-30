@@ -51,6 +51,16 @@ Route::get('/get-users', [UserController::class, 'index']);
 Route::post('/updateMasive', [UserController::class, 'massive']);
 Route::post('/v1/dropaccount', [DropshippingController::class, 'addDropshippingAccount']);
 Route::post('/v1/test', [StripeController::class, 'getPriceIdOfPlan']);
+Route::prefix('/v1/stripe/')->group(function () {
+    Route::post('/verify-payment', [StripeController::class, 'verifyAndCreditWallet']);
+    Route::post('/create-payment-intent', [StripeController::class, 'createPaymentIntent']);
+    Route::post('/create-setup-intent-link', [StripeController::class, 'createSetupIntentLink']);
+    Route::post('/create-subscription', [StripeController::class, 'createSubscriptionLink']);
+});
+
+
+
+
 // Route::post('/create_wallet', [UserController::class, 'storeWallet']);
 
 // Route::post('/add/phoneNumber', [UserController::class, 'addNumber']);

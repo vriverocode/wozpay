@@ -76,7 +76,7 @@ class LinkController extends Controller
             'categorie'         => intval($request->categorie),
             'type'              => $request->type,
             'user_id'           => $request->user()->id,
-            'due_time'          => date('Y-m-d H:i:s', time() + 7200)
+            // 'due_time'          => date('Y-m-d H:i:s', time() + 7200)
         ]);
         return $this->returnSuccess(200, $link);
     }
@@ -97,7 +97,7 @@ class LinkController extends Controller
             'pay_status'        => 0,
             'user_id'           => $request->user()->id,
             'products'          => $request->products,
-            'due_date'          => date('Y-m-d H:i:s', time() + 7200)
+            // 'due_date'          => date('Y-m-d H:i:s', time() + 7200)
         ]);
 
         $this->setProductInLink(json_decode($request->products, true), $link->id);

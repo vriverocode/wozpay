@@ -765,6 +765,14 @@ const router = createRouter({
             beforeEnter: auth,
         },
         {
+            path: "/checkout/success_client",
+            name: "checkout_success_client",
+            component: () => import("@/pages/checkoutSuccess.vue"),
+            meta: {
+                title: "🔐 Woz payments - pago seguro",
+            },
+        },
+        {
             path: "/pay_link_dashboard",
             name: "pay_link_dashboard",
             component: () => import("@/pages/dashboardLink.vue"),

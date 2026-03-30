@@ -9,6 +9,13 @@
             <!-- Form -->
             <div class="checkout-form">
                 <!-- Stripe Payment Element -->
+                <div class="q-mb-md">
+                    <div class="text-subtitle2 q-mb-xs" style="color: #4b5563; font-weight: 600;">
+                        Nombre del titular de la tarjeta *
+                    </div>
+                    <q-input v-model="payerName" outlined dense color="primary" placeholder="Ej: Juan Pérez"
+                        :rules="[val => !!val || 'El nombre es obligatorio']" hide-bottom-space />
+                </div>
                 <div class="form-group">
                     <div id="payment-element" ref="paymentElementRef" class="payment-element-wrapper"></div>
                 </div>
@@ -28,11 +35,9 @@
                 </div>
 
                 <!-- Submit Button -->
-                <q-btn unelevated no-caps color="primary" size="lg" class="submit-button"
-                    :loading="stripeStore.isLoading" :disable="stripeStore.isLoading || !isPaymentElementReady"
-                    @click="handleProcessPayment">
-                    <q-icon name="eva-credit-card-outline" class="q-mr-sm" />
-                    {{ stripeStore.isLoading ? 'Procesando...' : 'Confirmar Pago' }}
+                <q-btn unelevated no-caps color="primary" size="lg" class="submit-button" :loading="isProcessing"
+                    :disable="isProcessing || !elementsLoaded" @click="handleProcessPayment">
+                    Confirmar Pago Seguro
                 </q-btn>
             </div>
         </div>
@@ -63,57 +68,109 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, onBeforeUnmount } from 'vue';
-import { loadStripe } from '@stripe/stripe-js';
+// Importaciones Esenciales
+import { ref, onMounted, computed } from 'vue';
 import { useQuasar } from 'quasar';
-import { useStripeStore } from '@/services/store/stripe.store';
+import { useStripeStore } from '../../services/store/stripe.store';
+import { loadStripe } from '@stripe/stripe-js';
 import { useRoute, useRouter } from 'vue-router';
-import { storeToRefs } from 'pinia';
 
-
-const $q = useQuasar();
-const stripeStore = useStripeStore();
-
-const stripe = ref(null);
-const elements = ref(null);
-const paymentElement = ref(null);
-const paymentElementRef = ref(null);
-const router = useRouter()
-const stripeError = ref(null);
-const isPaymentElementReady = ref(false);
-const loading = ref(false)
 const route = useRoute()
-
-onMounted(async () => {
-    initStripe()
-});
-
-// Limpiar al desmontar
-onBeforeUnmount(() => {
-    if (paymentElement.value) {
-        paymentElement.value.unmount();
+const props = defineProps({
+    link: {
+        type: Object,
+        required: true
     }
 });
 
-const initStripe = async () => {
+const $q = useQuasar();
+const stripeStore = useStripeStore();
+const router = useRouter();
+const payerName = ref('');
+// Variables de Stripe puras
+let stripeInstance = null;
+let elementsInstance = null;
+let paymentElementInstance = null;
+
+// Estado Local
+const stripeError = ref(null);
+const elementsLoaded = ref(false);
+const isProcessing = ref(false);
+
+const loading = computed(() => stripeStore.loading);
+const loadingStripeStore = computed(() => stripeStore.getLoading);
+
+// 1. Función para montar (o remontar) el formulario en el DOM
+const mountStripeElement = () => {
+    elementsLoaded.value = false;
+    const paymentElementOptions = {
+        layout: {
+            type: 'accordion',
+            defaultCollapsed: false,
+            radios: true,
+            spacedAccordionItems: false
+        },
+        fields: {
+
+            billingDetails: {
+                name: 'auto',
+                email: 'auto',
+                phone: 'auto',
+                address: {
+                    country: 'auto',
+                    line1: 'auto',
+                    line2: 'auto',
+                    city: 'auto',
+                    state: 'auto',
+                    postalCode: 'auto'
+                }
+            }
+        },
+        paymentMethodTypes: [
+            'card',
+        ],
+        // wallets: {
+        //     applePay: 'auto',
+        //     googlePay: 'auto'
+        // }
+    };
+    if (paymentElementInstance) {
+        paymentElementInstance.destroy();
+    }
+
+    paymentElementInstance = elementsInstance.create("payment", paymentElementOptions);
+    paymentElementInstance.mount("#payment-element");
+
+    paymentElementInstance.on('ready', () => {
+        elementsLoaded.value = true;
+    });
+};
+
+// 2. NUEVA FUNCIÓN: Extraemos toda la lógica pesada de inicialización aquí
+const initializeStripeData = async () => {
     try {
-        // Obtener la clave pública de Stripe
-        const stripeKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY || null;
-        if (stripeKey == null) {
-            throw new Error(`Error: ${errors.value.consoleError}`);
-        }
-        stripe.value = await loadStripe(stripeKey);
-        if (!stripe.value) {
-            throw new Error('No se pudo cargar Stripe');
+        stripeInstance = await loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+
+        if (!stripeInstance) {
+            stripeError.value = "Error crítico al inicializar la pasarela de pago.";
+            return;
         }
 
-        const intentResult = await stripeStore.getSetupIntent();
+        let intentResult;
+
+        // EVALUAMOS DIRECTAMENTE EL TIPO DESDE EL OBJETO LINK
+        if (props.link.type === 2) {
+            // Es una Suscripción
+            intentResult = await stripeStore.getSetupIntentLink();
+        } else {
+            // Es un cobro único (type 4, etc)
+            intentResult = await stripeStore.getPaymentIntent(props.link.id);
+        }
 
         if (!intentResult.success) {
-            throw new Error(intentResult.error || 'Error al obtener el setup intent');
+            stripeError.value = intentResult.error || 'No se pudieron obtener los detalles del pago.';
+            return;
         }
-
-        const clientSecret = intentResult.clientSecret;
 
         const appearance = {
             theme: 'stripe',
@@ -143,126 +200,117 @@ const initStripe = async () => {
             }
         };
 
-        elements.value = stripe.value.elements({
-            clientSecret: clientSecret,
+        elementsInstance = stripeInstance.elements({
+            clientSecret: intentResult.clientSecret,
             appearance: appearance,
             locale: 'es'
         });
-        const paymentElementOptions = {
-            layout: {
-                type: 'accordion',
-                defaultCollapsed: false,
-                radios: true,
-                spacedAccordionItems: false
-            },
-            fields: {
-                billingDetails: {
-                    name: 'auto',
-                    email: 'auto',
-                    phone: 'auto',
-                    address: {
-                        country: 'auto',
-                        line1: 'auto',
-                        line2: 'auto',
-                        city: 'auto',
-                        state: 'auto',
-                        postalCode: 'auto'
-                    }
-                }
-            },
-            paymentMethodTypes: [
-                'card',
-            ],
-            // wallets: {
-            //     applePay: 'auto',
-            //     googlePay: 'auto'
-            // }
-        };
 
-        paymentElement.value = elements.value.create('payment', paymentElementOptions);
-
-        paymentElement.value.on('ready', () => {
-            isPaymentElementReady.value = true;
-        });
-
-        paymentElement.value.on('change', (event) => {
-            if (event.error) {
-                stripeError.value = event.error.message;
-            } else {
-                stripeError.value = null;
-            }
-        });
-        loading.value = false
-        setTimeout(() => {
-            paymentElement.value.mount('#payment-element');
-        }, 400);
+        // Llamamos a la función para pintar el formulario
+        mountStripeElement();
 
     } catch (error) {
-        console.error('Error al inicializar Stripe:', error);
-        stripeError.value = error.message || 'Error al cargar el sistema de pagos. Por favor, recarga la página.';
+        console.error("Error durante la inicialización de Stripe:", error);
+        stripeError.value = "Ocurrió un error inesperado al cargar el formulario de pago.";
     }
-}
+};
+
+// 3. ONMOUNTED LIMPIO: Solo llama a la función principal
+onMounted(() => {
+    initializeStripeData();
+});
+
+
+
 const handleProcessPayment = async () => {
-    if (!isPaymentElementReady.value) {
-        $q.notify({ type: 'negative', message: 'El formulario de pago aún no está listo' });
+    // Validación del nombre (que agregamos en el paso anterior)
+    if (!payerName.value || payerName.value.trim() === '') {
+        stripeError.value = "Por favor, ingresa el nombre del titular de la tarjeta.";
         return;
     }
 
+    if (!elementsLoaded.value || isProcessing.value) return;
+
+    isProcessing.value = true;
     stripeError.value = null;
-    stripeStore.setError(null);
 
     try {
-        const result = await stripeStore.confirmPayment(stripe.value, elements.value);
+        // BIFURCACIÓN SEGÚN EL TIPO DE LINK
+        if (props.link.type === 2) {
 
-        if (result.success && result.paymentMethod) {
-            const finalizeResult = await stripeStore.finalizeSubscription(
-                result.paymentMethod,
-                payPlan.value
-            );
+            // --- 1. FLUJO DE SUSCRIPCIÓN ---
+            const { error, setupIntent } = await stripeInstance.confirmSetup({
+                elements: elementsInstance,
+                confirmParams: {
+                    payment_method_data: {
+                        billing_details: { name: payerName.value }
+                    }
+                },
+                redirect: 'if_required',
+            });
 
-            if (finalizeResult.success) {
-                $q.notify({
-                    type: 'positive',
-                    message: '¡Suscripción activa con éxito!',
-                    position: 'top'
+            if (error) {
+                stripeError.value = error.message;
+                mountStripeElement();
+            } else if (setupIntent && setupIntent.status === 'succeeded') {
+
+                // Enviamos los datos al backend para crear la suscripción usando props.link.id
+                const result = await stripeStore.createSubscriptionLink({
+                    link_id: props.link.id,
+                    payment_method_id: setupIntent.payment_method,
+                    payer_name: payerName.value,
                 });
-                console.log(finalizeResult)
 
-                // AQUÍ: Redirigir al usuario porque ya terminó el proceso
-                router.push('/checkout/success?trx=' + finalizeResult.data.data.trx);
-                return;
-            } else {
-                console.log(finalizeResult)
-                throw finalizeResult.error;
+                if (result.success) {
+                    $q.notify({ color: 'positive', message: '¡Suscripción programada con éxito!' });
+                    router.push('/trasacction-public/view/10/' + result.data)
+                } else {
+                    stripeError.value = "Error al programar la suscripción. Contacte soporte.";
+                }
             }
+
         } else {
-            console.log(result)
-            throw new Error('Error al procesar el pago.');
+
+            // --- 2. FLUJO DE VENTA ÚNICA ---
+            const { error, paymentIntent } = await stripeInstance.confirmPayment({
+                elements: elementsInstance,
+                confirmParams: {
+                    payment_method_data: {
+                        billing_details: { name: payerName.value }
+                    }
+                },
+                redirect: 'if_required',
+            });
+
+            if (error) {
+                stripeError.value = error.message;
+                mountStripeElement();
+            } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+
+                // Verificamos el pago único usando props.link.id
+                const result = await stripeStore.verifyPaymentSuccess(paymentIntent.id, props.link.id);
+
+                if (result.success) {
+                    $q.notify({ color: 'positive', message: '¡Pago realizado con éxito!' });
+                    router.push('/trasacction-public/view/10/' + result.data)
+                } else {
+                    stripeError.value = "Pago cobrado, pero ocurrió un error al acreditar su wallet.";
+                }
+            } else {
+                stripeError.value = "El estado del pago es incompleto. Intente de nuevo.";
+                mountStripeElement();
+            }
         }
 
-    } catch (error) {
-        console.error('Error en el proceso de pago:', error);
-        console.log(error)
-        $q.notify({
-            type: 'negative',
-            message: 'Ocurrió un error inesperado.',
-            position: 'top'
-        });
-        resetStripeFlow();
+    } catch (e) {
+        console.error("Error durante el proceso de pago:", e);
+        stripeError.value = "Ocurrió un error inesperado al procesar el pago.";
+        mountStripeElement();
+    } finally {
+        isProcessing.value = false;
     }
-};
-
-const resetStripeFlow = async () => {
-    isPaymentElementReady.value = false;
-
-    if (paymentElement.value) {
-        paymentElement.value.destroy();
-    }
-
-    await initStripe();
 };
 </script>
-
 <style lang="scss" scoped>
 .checkout-container {
     //display: flex;
@@ -271,14 +319,14 @@ const resetStripeFlow = async () => {
     //min-height: 100vh;
     padding: 2rem 1rem;
     background: white
-
 }
 
 .checkout-card {
     width: 100%;
-    max-width: 520px;
+    max-width: 700px;
     background: #ffffff;
     border-radius: 16px;
+    margin: auto;
     overflow: hidden;
     animation: slideUp 0.3s ease-out;
 }

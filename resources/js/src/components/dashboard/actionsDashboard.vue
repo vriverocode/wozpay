@@ -32,7 +32,8 @@
           </q-btn>
         </div>
         <div class="col-3 q-px-xs q-mt-md">
-          <q-btn color="white" flat no-caps class="q-px-xs q-py-none actions-button w-100" to="/dropshipping/welcome">
+          <q-btn color="white" flat no-caps class="q-px-xs q-py-none actions-button w-100"
+            to="https://wozdropshipping.figma.site/ ">
             <img :src="droppi" alt="" style="height:32px;" class="q-mt-xs">
             <div class="q-mt-none text-dark text-body2 text-ellipsis ellipsis" style="width: 100%;">Woz Dropshipping
             </div>
@@ -48,7 +49,8 @@
         </div>
 
         <div class="col-3 q-px-xs q-mt-md">
-          <q-btn color="white" flat no-caps class="q-px-xs q-py-none actions-button w-100" to="/dashboard">
+          <q-btn color="white" flat no-caps class="q-px-xs q-py-none actions-button w-100"
+            to="https://wozpaymentsapi.figma.site/">
             <img :src="api" alt="" style="height:32px;" class="q-mt-xs">
             <div class="q-mt-none text-dark text-body2 text-ellipsis ellipsis" style="width: 100%;">Woz api {{ '</>' }}
             </div>
@@ -56,7 +58,7 @@
         </div>
         <div class="col-3 q-px-xs q-mt-md">
           <q-btn color="white" flat no-caps class="q-px-xs q-py-none actions-button w-100"
-            :class="{ 'rekutu-efect': user.viewRekutu }" to="/apply">
+            :class="{ 'rekutu-efect': user.viewRekutu }" to="https://crediapp.figma.site/"> <!-- /apply -->
             <div v-if="loan.status == 3 && loan.red_tapes.use_count < 3">
               <q-icon :name="iconis.ionRepeat" size="2.5rem" class="q-mt-xs" />
             </div>

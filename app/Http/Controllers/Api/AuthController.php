@@ -15,7 +15,9 @@ class AuthController extends Controller
 	public function login(Request $request){
 		try {
 			$validator = Validator::make($request->all(), [
-				'email'=> 'required',
+				// 'email'=> 'required',
+
+				'dni'=> 'required',
 				'password'=>'required'
 		]);
 
@@ -33,7 +35,8 @@ class AuthController extends Controller
 
 		try{
 			$token = JWTAuth::attempt([
-				'email'  	=> $request->email,
+				// 'email'  	=> $request->email,
+				'dni' => $request->dni,
 				'password'	=> $request->password
 			]);
 		}catch (Exception $e) {

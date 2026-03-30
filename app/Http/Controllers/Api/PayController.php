@@ -118,6 +118,36 @@ class PayController extends Controller
         return  'ok';
         
     }
+    public function storeStripePayLink($data)
+    {
+        try {
+            $payLink = PayLink::create([
+                'link_id'       =>  $data['link']->id,
+                'amount'        =>  $data['link']->amount, 
+                'rate_amount'   =>  $data['link']->rate_amount,
+                'method'        =>  'stripe',
+                'coin_id'       =>  $data['link']->coin_id,
+                'type'          =>  21, // Ajusta este número según el tipo que uses para links
+                'status'        =>  $data['link']->pay_status == 3 ? 2 : 1,  // 2 = Aprobada según tu modelo
+                'concept'       =>  'Pago de link ID: ' . $data['link']->code,
+                'operation_id'  =>  $data['result']->id, 
+                'bank'          =>  'Stripe',
+                'pay_date'      =>  date('Y-m-d'),
+                
+                // Nuevos campos rescatados del pagador anónimo
+                'card_name'     =>  $data['payer_name'],
+                'email'         =>  $data['payer_email'],
+                'card'          =>  $data['last4'], 
+            ]);
+        } catch (\Exception $th) {
+            return $th->getMessage();
+        }
+
+        // Si necesitas emitir un evento específico para cuando pagan un link, hazlo aquí.
+        // event(new \App\Events\UserUpdateEvent( ... ));
+        
+        return $payLink->id;
+    }
     public function storePayLink(Request $request){
         $validated = $this->validateFieldsFromInputLink($request->all()) ;
         if (count($validated) > 0) return $this->returnFail(400, $validated[0]);
