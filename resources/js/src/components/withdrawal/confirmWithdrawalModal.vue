@@ -32,7 +32,8 @@
                 <div class="flex items-center justify-between q-pb-sm">
                   <div>
                     <div class="title-withdarwal">Comisión a pagar</div>
-                    <div class="subtitle-withdarwal text-grey-7">{{ numberFormat(withdrawal.sliderCheck.value) }}% sobre
+                    <div class="subtitle-withdarwal text-grey-7">{{ numberFormat(withdrawal.typeOfWithdrawalFee) }}%
+                      sobre
                       monto a retirar</div>
                   </div>
                   <div class="title-withdarwal">Gs. {{ numberFormat(withdrawal.deductAmount) }}</div>
@@ -115,7 +116,7 @@ export default {
       dataToWithdrawal.append('amount', amount)
       dataToWithdrawal.append('comision_by_type', withdrawal.value.deductAmount.toFixed(2))
       dataToWithdrawal.append('comision_fixed', 7500)
-      dataToWithdrawal.append('type', withdrawal.value.sliderCheck.type)
+      dataToWithdrawal.append('type', withdrawal.value.typeOfWithdrawal)
       dataToWithdrawal.append('amount_to_transfer', withdrawal.value.totalWithdrawalAmount.toFixed(2))
 
       withdrawalStore.createWithdrawal(dataToWithdrawal)
@@ -134,8 +135,12 @@ export default {
     }
     const deducAmount = () => {
 
-      let amount = typeof withdrawal.value.amount == 'number' ? withdrawal.value.amount : parseInt(withdrawal.value.amount.replace(/\./g, ''))
-      withdrawal.value.deductAmount = ((isNaN(amount) ? 0 : amount) * withdrawal.value.sliderCheck.value) / 100;
+      let amount = typeof withdrawal.value.amount == 'number'
+        ? withdrawal.value.amount
+        : parseInt(withdrawal.value.amount.replace(/\./g, ''))
+
+
+      withdrawal.value.deductAmount = ((isNaN(amount) ? 0 : amount) * withdrawal.value.typeOfWithdrawalFee) / 100;
       withdrawal.value.totalWithdrawalAmount = (isNaN(amount) ? 0 : amount) - withdrawal.value.deductAmount - 7500;
     }
     const validateAmount = () => {

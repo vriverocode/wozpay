@@ -7,14 +7,29 @@ import wozIcons from '@/assets/icons/wozIcons'
 import utils from '@/util/numberUtil';
 import { useRouter } from 'vue-router';
 import { useWalletStore } from '@/services/store/wallet.store'
-import customSlider from '@/components/layouts/inputs/customSlider.vue';
 import confirmWithdrawalModal from '@/components/withdrawal/confirmWithdrawalModal.vue';
+import { useWithdrawalStore } from '@/services/store/withdrawal.store'
+import { useQuasar } from 'quasar';
 
 const { user } = storeToRefs(useAuthStore())
-const { balances } = storeToRefs(useWalletStore())
+const withdrawalStore = useWithdrawalStore()
+const availableBalances = ref({
+  15: 0,
+  10: 0,
+  8: 0,
+  3.9: 0
+})
+const q = useQuasar()
+const step = ref(1)
+const dialog = ref(false)
+const router = useRouter()
+const stepTitle = ref('Cuenta bancaria')
+const ready = ref(false)
+const store = useBankAccountStore()
 const withdrawalForm = ref({
   account: '',
-  sliderCheck: 0,
+  typeOfWithdrawal: 1,
+  typeOfWithdrawalFee: 1,
   amount: user.value.wallet_link?.balance ||
     user.value.wallet?.balance,
   balanceTotal: user.value.wallet_link?.balance ||
@@ -36,12 +51,7 @@ const tableInfo = [
     subtitle: 'Espera más dias para bajar la comision'
   }
 ]
-const step = ref(1)
-const dialog = ref(false)
-const router = useRouter()
-const stepTitle = ref('Cuenta bancaria')
-const ready = ref(false)
-const store = useBankAccountStore()
+
 const accountsOptions = ref([])
 const selectedAccount = ref({})
 const getAccountsBankbyUser = () => {
@@ -49,8 +59,20 @@ const getAccountsBankbyUser = () => {
   store.getAllAccountBankByUser(user.value.id).then((data) => {
     if (data.code !== 200) return
     accountsOptions.value = data.data
+
     ready.value = true
+    selectedAccount.value = accountsOptions.value[0]
   })
+}
+const getBalances = () => {
+  withdrawalStore.getWithdrawalBalances()
+    .then((response) => {
+      availableBalances.value = response
+      updateAmountWithdrawal(1)
+    })
+    .catch((error) => {
+      console.error("Error cargando balances", error)
+    })
 }
 const stepBack = () => {
   if (step.value == 2) {
@@ -67,7 +89,36 @@ const nextStep = () => {
   createWithdrawal()
 }
 const createWithdrawal = () => {
+  if (withdrawalForm.value.amount == 0) {
+    showNotify('negative', 'El monto a retirar debe ser mayor a 0')
+    return
+  }
   showDialog()
+}
+const changeTextBySelection = (selection) => {
+  const options = [
+    {
+      title: 'Ingresos de hoy',
+      subtitle: 'Estos son los ingresos del día'
+    },
+    {
+      title: 'Ingresos de hoy',
+      subtitle: 'Estos son los ingresos del día'
+    },
+    {
+      title: 'Ingresos de hace 7 dias',
+      subtitle: 'Estos son los ingresos de hace 7 dias '
+    },
+    {
+      title: 'Ingresos de hace 14 dias',
+      subtitle: 'Estos son los ingresos de hace 14 dias '
+    },
+    {
+      title: 'Ingresos de más de 30 dias',
+      subtitle: 'Estos son los ingresos de hace más de 30 dias '
+    }
+  ]
+  tableInfo[0] = options[selection];
 }
 const disableButton = ref(true)
 const setSelectedAccount = (id) => {
@@ -75,49 +126,11 @@ const setSelectedAccount = (id) => {
   selectedAccount.value = accountsOptions.value.find(item => item.id == id)
 }
 const setValueByIndex = ref([
-  `Gs. ${utils.numberFormat(user.value.wallet_link?.balance || user.value.wallet?.balance)}`,
+  `Gs. ${utils.numberFormat(0)}`, // Usamos el monto filtrado aquí
   'Instantaneo',
-  '8%'
+  '15%'
 ])
-const handlerSlider = (sliderData) => {
-  if (!sliderData) {
-    setValueByIndex.value = [
-      `Gs. ${utils.numberFormat(user.value.wallet_link?.balance || user.value.wallet?.balance)}`,
-      'Instantaneo',
-      15 + '%'
-    ]
-    return
-  }
-  if (sliderData.value == 15) {
-    setValueByIndex.value = [
-      `Gs. ${utils.numberFormat(user.value.wallet_link?.balance || user.value.wallet?.balance)}`,
-      'Instantaneo',
-      sliderData.value + '%'
-    ]
-  }
-  if (sliderData.value == 10) {
-    setValueByIndex.value = [
-      `Gs. ${utils.numberFormat(user.value.wallet_link?.balance || user.value.wallet?.balance)}`,
-      'Instantaneo',
-      sliderData.value + '%'
-    ]
-  }
-  if (sliderData.value == 8) {
-    setValueByIndex.value = [
-      `Gs. ${utils.numberFormat(user.value.wallet_link?.balance || user.value.wallet?.balance)}`,
-      'Instantaneo',
-      sliderData.value + '%'
-    ]
-  }
-  if (sliderData.value == 3.9) {
-    setValueByIndex.value = [
-      `Gs. ${utils.numberFormat(user.value.wallet_link?.balance || user.value.wallet?.balance)}`,
-      'Instantaneo',
-      sliderData.value + '%'
-    ]
-  }
 
-}
 const showDialog = () => {
   dialog.value = true
   deducAmount()
@@ -126,7 +139,10 @@ const hideModal = () => {
   dialog.value = false
 }
 const deducAmount = () => {
-  withdrawalForm.value.deductAmount = (withdrawalForm.value.amount * withdrawalForm.value.sliderCheck.value) / 100;
+  const selectedCheckpoint = checkpointsWithdrawal.find(c => c.type == withdrawalForm.value.typeOfWithdrawal);
+  const percentage = selectedCheckpoint ? selectedCheckpoint.value : 15;
+
+  withdrawalForm.value.deductAmount = (withdrawalForm.value.amount * percentage) / 100;
   withdrawalForm.value.totalWithdrawalAmount = withdrawalForm.value.amount - withdrawalForm.value.deductAmount;
 }
 const redirectToComplete = () => {
@@ -134,8 +150,73 @@ const redirectToComplete = () => {
     router.push('/withdrawal-complete')
   }, 500)
 }
+
+const checkpointsWithdrawal = [
+  { type: 1, days: 0, label: '15%', value: 15 },    // Index 0
+  { type: 2, days: 7, label: '10%', value: 10 },    // Index 1 (Este es tu Step 1 visual)
+  { type: 3, days: 15, label: '8%', value: 8 },      // Index 2
+  { type: 4, days: 30, label: '3,9%', value: 3.9 },  // Index 3
+];
+
+const checkpoints = ref({
+  1: true,
+  2: false,
+  3: false,
+  4: false,
+})
+
+const updateAmountWithdrawal = (type) => {
+  if (!type || ![1, 2, 3, 4].includes(type)) {
+    type = 1;
+  }
+
+  // Obtenemos los datos del checkpoint seleccionado (15, 10, 8 o 3.9)
+  let data = checkpointsWithdrawal.find((checkpoint) => checkpoint.type == type);
+
+  // Extraemos el monto correspondiente del backend, o 0 si no hay
+  let currentBalance = availableBalances.value[data.value] || 0;
+
+  // ¡Importante! Actualizamos el monto a retirar en el formulario
+  withdrawalForm.value.amount = currentBalance;
+  withdrawalForm.value.balanceTotal = currentBalance;
+
+  setValueByIndex.value = [
+    `Gs. ${utils.numberFormat(currentBalance)}`, // Usamos el monto filtrado aquí
+    'Instantaneo',
+    data.label
+  ]
+  withdrawalForm.value.typeOfWithdrawalFee = data.value
+  changeTextBySelection(type)
+  restrigedSelectors(type)
+}
+
+const restrigedSelectors = (type) => {
+  if (withdrawalForm.value.typeOfWithdrawal != type) {
+    Object.values(checkpoints.value).forEach((element, index) => {
+
+      if (type == (index + 1)) {
+        checkpoints.value[index + 1] = true
+      } else {
+        checkpoints.value[index + 1] = false
+      }
+    });
+  } else {
+    checkpoints.value[type] = true
+  }
+  withdrawalForm.value.typeOfWithdrawal = type
+}
+const showNotify = (type, message) => {
+  q.notify({
+    message: message,
+    color: type,
+    actions: [
+      { icon: 'eva-close-outline', color: 'white', round: true, handler: () => { /* ... */ } }
+    ]
+  })
+}
 onMounted(() => {
   getAccountsBankbyUser()
+  getBalances()
 })
 </script>
 <template>
@@ -144,7 +225,7 @@ onMounted(() => {
       <div class="q-pl-md-lg q-pl-md q-py-md q-mt-sm" style="border-bottom: 1px solid lightgray; height: 8%;">
         <div class="text-h6 text-bold">{{ stepTitle }}</div>
       </div>
-      <q-form @submit="nextStep" style="height: 94%;">
+      <q-form @submit="nextStep" style="height: 94%;" v-if="ready">
         <div style="height: 80%; overflow: auto;">
           <template v-if="step == 1">
             <div v-for="account in accountsOptions" :key="account.id"
@@ -205,14 +286,40 @@ onMounted(() => {
                 <div style="font-size: 1.2rem; font-weight: 500;">
                   Retiras tus ganancias
                 </div>
-                <div class="flex justify-between items-center q-mt-md containerSaldo">
+                <div class="flex justify-between items-center q-mt-sm containerSaldo">
                   <div class="text-balanceSaldo">Saldo total</div>
-                  <div class="text-balanceSaldo">Gs. {{ utils.numberFormat(user.wallet_link?.balance ||
-                    user.wallet?.balance) }}</div>
+                  <div class="text-balanceSaldo">Gs. {{ utils.numberFormat(withdrawalForm.amount) }}</div>
                 </div>
               </div>
-              <div>
-                <customSlider v-model="withdrawalForm.sliderCheck" @change="handlerSlider" />
+              <div class="q-mt-md">
+                <!-- <customSlider v-model="withdrawalForm.sliderCheck" @change="handlerSlider" /> -->
+                <div class="q-pl-sm q-mb-md">
+                  <div class="text-subtitle1 text-weight-medium">Comisión a pagar</div>
+                  <div class="text-body2 text-weight-medium text-primary">Escoge que comisión quieres pagar</div>
+                </div>
+                <div class="q-pb-md q-pt-sm q-px-sm" style="border: 1px solid lightgray; border-radius: 0.5rem;">
+                  <div class="q-py-none" v-for="checkpoint in checkpointsWithdrawal" :key="checkpoint.type">
+                    <div>
+                      <div class="flex items-center justify-between q-pt-sm q-pb-xs"
+                        style="border-bottom: 1px solid lightgray;">
+                        <div class=" text-grey-9">
+                          {{ checkpoint.label }} sobre monto a retirar
+                        </div>
+                        <div class="q-mt-xs">
+                          <van-switch v-model="checkpoints[checkpoint.type]" class="swichtCoin " size="1rem"
+                            @update:model-value="updateAmountWithdrawal(checkpoint.type)" active-color="#21BA45"
+                            inactive-color="#d8d8d8">
+                            <template #node>
+                              <div class="icon-wrapper">
+                              </div>
+                            </template>
+                          </van-switch>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
               </div>
               <div class="q-mt-md">
                 <div v-for="(info, index) in tableInfo" :key="index"
@@ -245,6 +352,9 @@ onMounted(() => {
           </div>
         </div>
       </q-form>
+      <div v-else class="q-py-lg flex flex-center" style="height: 94%;">
+        <q-spinner color="primary" size="3em" />
+      </div>
     </div>
 
     <confirmWithdrawalModal :dialog="dialog" :withdrawalData="withdrawalForm" @hideModal="hideModal"

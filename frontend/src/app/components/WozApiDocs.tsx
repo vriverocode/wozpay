@@ -743,7 +743,7 @@ export function WozApiDocs({ isOpen, onClose }: WozApiDocsProps) {
                       <h4 className="font-semibold text-gray-900">Clave Publicable (Publishable Key)</h4>
                     </div>
                     <code className="block bg-white border border-green-200 rounded px-3 py-2 text-sm font-mono text-gray-900 mb-3 overflow-x-auto">
-                      pk_live_xxxxxxxxxxxxxxxxxxxxxxxxxx
+                     
                     </code>
                     <p className="text-sm text-gray-700 mb-2">
                       <strong className="font-semibold">Uso:</strong> Código JavaScript del navegador (cliente)
@@ -762,7 +762,7 @@ export function WozApiDocs({ isOpen, onClose }: WozApiDocsProps) {
                       <h4 className="font-semibold text-gray-900">Clave Secreta (Secret Key)</h4>
                     </div>
                     <code className="block bg-white border border-red-200 rounded px-3 py-2 text-sm font-mono text-gray-900 mb-3 overflow-x-auto">
-                      sk_live_xxxxxxxxxxxxxxxxxxxxxxxxxx
+     
                     </code>
                     <p className="text-sm text-gray-700 mb-2">
                       <strong className="font-semibold">Uso:</strong> Servidor backend (nunca en frontend)
@@ -783,11 +783,7 @@ export function WozApiDocs({ isOpen, onClose }: WozApiDocsProps) {
                 </p>
 
                 <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto mb-6">
-                  <pre className="text-sm text-gray-100 font-mono">
-{`Authorization: Bearer sk_live_xxxxxxxxxxxxxxxxxx
-Content-Type: application/json
-Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000`}
-                  </pre>
+
                 </div>
 
                 <div className="bg-white border border-gray-200 rounded-lg p-5 mb-6">

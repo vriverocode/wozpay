@@ -252,4 +252,5 @@ Route::middleware('jwt.verify')->prefix('withdrawal')->group(function () {
     Route::post('/', [WithdrawalController::class, 'store']);
     Route::get('/all', [WithdrawalController::class, 'getAllByUser']);
     Route::get('/{id}', [WithdrawalController::class, 'getById']);
+    Route::get('/f/balances', [WithdrawalController::class, 'getWithdrawalData']);
 });

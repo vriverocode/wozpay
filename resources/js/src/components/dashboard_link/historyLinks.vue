@@ -108,7 +108,7 @@ export default {
         .then((response) => {
           if (response.code !== 200) throw response
           userLinks.value = response.data
-          clocks(response.data)
+          // clocks(response.data)
           setTimeout(() => {
             load.value = true
           }, 500);
@@ -129,35 +129,7 @@ export default {
         ]
       })
     }
-    const clocks = (data) => {
-      const withTime = data.filter((item) => item.status != 2)
 
-      withTime.forEach(element => {
-
-        element.timer = setInterval(() => {
-          let today = new Date().getTime();
-          let link_due_date = new Date(moment(element.due_time)).getTime();
-          let diffTime = link_due_date - today;
-          let duration = moment.duration(diffTime, 'milliseconds');
-
-          if (diffTime < 0) {
-            clearInterval(element.timer);
-            setTimeout(() => {
-              document.getElementById('timer-item' + element.id).innerHTML = '00:00:00'
-            }, 1000)
-            return
-          }
-
-          duration = moment.duration(duration - 1000, 'milliseconds');
-          let hour = (duration.hours() + '').length == 1 ? '0' + duration.hours() : duration.hours()
-          let minutes = (duration.minutes() + '').length == 1 ? '0' + duration.minutes() : duration.minutes()
-          let seconds = (duration.seconds() + '').length == 1 ? '0' + duration.seconds() : duration.seconds()
-          document.getElementById('timer-item' + element.id).innerHTML = hour + ":" + minutes + ":" + seconds
-        }, 1000)
-
-      });
-
-    }
     const goTo = (id) => {
       router.push('/link/pay/' + id)
     }

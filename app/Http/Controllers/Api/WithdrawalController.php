@@ -5,9 +5,10 @@ namespace App\Http\Controllers\Api;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Withdrawal;
-use App\Models\AccountBank;
 use Exception;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Link;
 
 class WithdrawalController extends Controller
 {
@@ -64,6 +65,41 @@ class WithdrawalController extends Controller
             return  $this->returnFail(500, $th->getMessage());
         }
         return $this->returnSuccess(200, 'Operation Successfully');
+    }
+    public function getWithdrawalData(Request $request)
+    {
+        $userId = $request->user()->id;
+        $now = Carbon::now();
+
+        $balances = [
+            // 15% -> Retiro inmediato. No filtramos por fecha para que incluya 
+            // los pagos de HOY y cualquier otro pago reciente que aún no cumpla 7 días.
+            '15'  => Link::where('user_id', $userId)
+                        ->where('pay_status', 3)
+                        ->sum('amount_to_client'),
+
+            // 10% -> Solo pagos que tengan 7 días o más de antigüedad.
+            // (Los de hoy no califican).
+            '10'  => Link::where('user_id', $userId)
+                        ->where('pay_status', 3)
+                        ->where('created_at', '<=', $now->copy()->subDays(7))
+                        ->sum('amount_to_client'),
+
+            // 8% -> Solo pagos que tengan 14 días o más de antigüedad.
+            // (Cambio aplicado: subDays(14)).
+            '8'   => Link::where('user_id', $userId)
+                        ->where('pay_status', 3)
+                        ->where('created_at', '<=', $now->copy()->subDays(14))
+                        ->sum('amount_to_client'),
+
+            // 3.9% -> El resto de pagos muy antiguos (ejemplo: 30 días o más).
+            '3.9' => Link::where('user_id', $userId)
+                        ->where('pay_status', 3)
+                        ->where('created_at', '<=', $now->copy()->subDays(30))
+                        ->sum('amount_to_client'),
+        ];
+
+        return $this->returnSuccess(200, $balances);
     }
     private function validateFieldsFromInput($inputs)
     {
