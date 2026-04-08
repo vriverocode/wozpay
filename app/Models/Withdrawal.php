@@ -22,6 +22,7 @@ class Withdrawal extends Model
         'bank_id',
         'pay_date',
         'user_id',
+        'withdrawal_id',
         'account_bank_id'
     ];
     protected $appends = ['status_label', 'method_label', 'comision_type_label'];

@@ -29,7 +29,7 @@ export const useWithdrawalStore = defineStore("withdrawal", {
             return await new Promise((resolve) => {
                 if (JwtService.getToken()) {
                     ApiService.setHeader();
-                    ApiService.get("/api/withdrawal/" + withdrawalId)
+                    ApiService.get("/api/withdrawal/u/" + withdrawalId)
                         .then(({ data }) => {
                             if (data.code !== 200) {
                                 throw data;
@@ -71,7 +71,7 @@ export const useWithdrawalStore = defineStore("withdrawal", {
           return await new Promise((resolve, reject) => {
             if (JwtService.getToken()) {
               ApiService.setHeader();
-              ApiService.get("/api/withdrawal/f/balances/")
+              ApiService.get("/api/withdrawal/balances/")
                   .then(({ data }) => {
                       if (data.code !== 200) {
                           throw data;
@@ -84,6 +84,29 @@ export const useWithdrawalStore = defineStore("withdrawal", {
                   });
             }
           });
+        },
+        async hasPendingWithdrawal() {
+            return await new Promise((resolve) => {
+                if (JwtService.getToken()) {
+                    ApiService.setHeader();
+                    ApiService.get("/api/withdrawal/pending")
+                        .then(({ data }) => {
+                            if (data.code !== 200) {
+                                throw data;
+                            }
+                            resolve(data.data);
+                        })
+                        .catch((response) => {
+                            console.log(response);
+                            resolve(null);
+                        });
+                } else {
+                    resolve(null);
+                }
+            }).catch((response) => {
+                console.log(response);
+                return null;
+            });
         },
     },
     getters: {},

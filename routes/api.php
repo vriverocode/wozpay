@@ -251,6 +251,7 @@ Route::middleware('jwt.verify')->prefix('package')->name('package.')->group(func
 Route::middleware('jwt.verify')->prefix('withdrawal')->group(function () {
     Route::post('/', [WithdrawalController::class, 'store']);
     Route::get('/all', [WithdrawalController::class, 'getAllByUser']);
-    Route::get('/{id}', [WithdrawalController::class, 'getById']);
-    Route::get('/f/balances', [WithdrawalController::class, 'getWithdrawalData']);
+    Route::get('/pending', [WithdrawalController::class, 'hasPending']);
+    Route::get('/balances', [WithdrawalController::class, 'getWithdrawalData']);
+    Route::get('/u/{id}', [WithdrawalController::class, 'getById']);
 });
