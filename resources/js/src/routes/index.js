@@ -308,6 +308,15 @@ const router = createRouter({
                     },
                 },
                 {
+                    path: "/admin/withdrawal/pending",
+                    name: "withdrawalPendingAdmin",
+                    component: () =>
+                        import("@/pages/admin/withdrawalPendingList.vue"),
+                    meta: {
+                        title: "Retiros pendientes",
+                    },
+                },
+                {
                     path: "/admin/deposit/byId/:id",
                     component: () => import("@/pages/admin/depositById.vue"),
                     meta: {

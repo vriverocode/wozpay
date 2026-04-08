@@ -50,13 +50,16 @@ class WithdrawalController extends Controller
     public function hasPending(Request $request)
     {
         try {
-            $userId = $request->user()->id;
-            $pending = Withdrawal::with(['accountBank.bank'])->where('user_id', $userId)
-                ->where('status', 1)
-                ->first();
-            $pendingCount = Withdrawal::where('user_id', $userId)
-                ->where('status', 1)
-                ->count();
+            $user = $request->user();
+            $isAdmin = (string) $user->rol_id !== '3';
+
+            $query = Withdrawal::query()->where('status', 1);
+            if (!$isAdmin) {
+                $query->where('user_id', $user->id);
+            }
+
+            $pending = (clone $query)->with(['accountBank.bank'])->first();
+            $pendingCount = (clone $query)->count();
         } catch (Exception $th) {
             return $this->returnFail(400, $th->getMessage());
         }
@@ -65,7 +68,72 @@ class WithdrawalController extends Controller
             'has_pending' => $pendingCount > 0,
             'pending_count' => $pendingCount,
             'withdrawalOrder' => $pending,
+            'scope' => $isAdmin ? 'all' : 'user',
         ]);
+    }
+
+    public function getPendingList(Request $request)
+    {
+        $user = $request->user();
+        if ((string) $user->rol_id === '3') {
+            return $this->returnFail(403, 'No autorizado');
+        }
+
+        try {
+            $statusFilter = $request->query('status', 'all');
+            $query = Withdrawal::with(['accountBank.bank', 'user'])
+                ->orderBy('created_at', 'DESC');
+
+            if ($statusFilter !== 'all') {
+                $statusMap = [
+                    'rejected' => 0,
+                    'pending' => 1,
+                    'approved' => 2,
+                ];
+                $normalized = array_key_exists($statusFilter, $statusMap)
+                    ? $statusMap[$statusFilter]
+                    : (is_numeric($statusFilter) ? (int) $statusFilter : null);
+
+                if (!in_array($normalized, [0, 1, 2], true)) {
+                    return $this->returnFail(400, 'Filtro de estado no valido');
+                }
+
+                $query->where('status', $normalized);
+            }
+
+            $withdrawals = $query->get();
+        } catch (Exception $th) {
+            return $this->returnFail(400, $th->getMessage());
+        }
+
+        return $this->returnSuccess(200, $withdrawals);
+    }
+
+    public function setPendingStatus($id, Request $request)
+    {
+        $user = $request->user();
+        if ((string) $user->rol_id === '3') {
+            return $this->returnFail(403, 'No autorizado');
+        }
+
+        $status = (int) $request->input('status');
+        if (!in_array($status, [0, 2], true)) {
+            return $this->returnFail(400, 'Estado no valido');
+        }
+
+        try {
+            $withdrawal = Withdrawal::where('id', $id)->where('status', 1)->first();
+            if (!$withdrawal) {
+                return $this->returnFail(404, 'Orden pendiente no encontrada');
+            }
+
+            $withdrawal->status = $status;
+            $withdrawal->save();
+        } catch (Exception $th) {
+            return $this->returnFail(400, $th->getMessage());
+        }
+
+        return $this->returnSuccess(200, $withdrawal);
     }
 
     public function store(Request $request)
@@ -238,7 +306,7 @@ class WithdrawalController extends Controller
 
             Link::whereIn('id', $linksToMark)->update(['withdrawal_id' => $withdrawal->id]);
 
-            $wallet = Wallet::where('user_id', $user->id)->first();
+            $wallet = Wallet::where('user_id', $user->id)->where('type', 2)->first();
             if ($wallet) {
                 $wallet->decrement('balance', $requestData['amount']);
             }

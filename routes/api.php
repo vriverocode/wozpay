@@ -252,6 +252,8 @@ Route::middleware('jwt.verify')->prefix('withdrawal')->group(function () {
     Route::post('/', [WithdrawalController::class, 'store']);
     Route::get('/all', [WithdrawalController::class, 'getAllByUser']);
     Route::get('/pending', [WithdrawalController::class, 'hasPending']);
+    Route::get('/pending/list', [WithdrawalController::class, 'getPendingList']);
+    Route::post('/pending/{id}/status', [WithdrawalController::class, 'setPendingStatus']);
     Route::get('/balances', [WithdrawalController::class, 'getWithdrawalData']);
     Route::get('/u/{id}', [WithdrawalController::class, 'getById']);
 });

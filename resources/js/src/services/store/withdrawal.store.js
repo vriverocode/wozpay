@@ -108,6 +108,52 @@ export const useWithdrawalStore = defineStore("withdrawal", {
                 return null;
             });
         },
+        async getPendingWithdrawals(status = "all") {
+            return await new Promise((resolve) => {
+                if (JwtService.getToken()) {
+                    ApiService.setHeader();
+                    ApiService.get(`/api/withdrawal/pending/list?status=${status}&`)
+                        .then(({ data }) => {
+                            if (data.code !== 200) {
+                                throw data;
+                            }
+                            resolve(data.data || []);
+                        })
+                        .catch((response) => {
+                            console.log(response);
+                            resolve([]);
+                        });
+                } else {
+                    resolve([]);
+                }
+            }).catch((response) => {
+                console.log(response);
+                return [];
+            });
+        },
+        async setPendingWithdrawalStatus(withdrawalId, status) {
+            return await new Promise((resolve) => {
+                if (JwtService.getToken()) {
+                    ApiService.setHeader();
+                    ApiService.post(`/api/withdrawal/pending/${withdrawalId}/status`, { status })
+                        .then(({ data }) => {
+                            if (data.code !== 200) {
+                                throw data;
+                            }
+                            resolve(data.data);
+                        })
+                        .catch((response) => {
+                            console.log(response);
+                            resolve(null);
+                        });
+                } else {
+                    resolve(null);
+                }
+            }).catch((response) => {
+                console.log(response);
+                return null;
+            });
+        },
     },
     getters: {},
 });
