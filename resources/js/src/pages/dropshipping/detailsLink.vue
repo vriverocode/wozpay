@@ -160,7 +160,7 @@ export default {
           link.value = data.data
           productsInLink.value = link.value.products_in_link
 
-          clocks()
+          // clocks()
         })
     }
     const clocks = () => {

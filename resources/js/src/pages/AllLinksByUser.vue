@@ -35,8 +35,6 @@
                   :class="{ 'text-positive': link.status == 2, 'text-grey-6': link.status != 2, 'text-negative': link.status == 0 }">
                   {{ amountToLink(link) }}
                 </div>
-                <div v-if="link.pay_status != 3" class="text-subtitle2 text-grey-6 text-right text-weight-medium"
-                  :id="'timer-item_link-user' + link.id" style="transition: all 1s ease ;" />
               </div>
 
             </div>
@@ -127,7 +125,7 @@ export default {
         .then((response) => {
           if (response.code !== 200) throw response
           userLinks.value = response.data
-          clocks(response.data)
+          // clocks(response.data)
           setTimeout(() => {
             load.value = true
           }, 500);

@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Link;
 use App\Models\Plan;
 use App\Models\Wallet;
+use App\Http\Controllers\Api\NotificationController;
+
 use Exception;
 use Illuminate\Http\Request;
 use Stripe\PaymentIntent;
@@ -74,7 +76,7 @@ class StripeController extends Controller
             // 2. Calcular el monto según las reglas de decimales de Stripe
             if ($currency === 'usd') {
                 // USD tiene 2 decimales: $10.00 se envía como 1000
-                $amount = $link->amount * 100; 
+                $amount = ($link->amount/$link->rate_amount) * 100; 
             } else {
                 // PYG es moneda de cero decimales: 10000 Gs se envían como 10000
                 $amount = $link->amount; 
@@ -92,7 +94,7 @@ class StripeController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            return $this->returnFail(500, 'Error: ' . $e->getMessage());
+            return $this->returnFail(400, 'Error: ' . $e->getMessage(). '-amount: '.$link->coin_id);
         }
     }
 
@@ -327,6 +329,21 @@ class StripeController extends Controller
 
         return $this->returnSuccess(200, $wallet);
     
+    }
+    private function sendNotification($message, $user, $subject, $type){
+        $notification = new NotificationController;
+        $requestNotification = new Request([
+            'text'      => $message,
+            'subject'   => $subject,
+            'user'   => $user,
+            'sender' => 'Woz Pay informa',
+            'type' => $type,
+        ]);
+        try {
+            $notification->storeNotification($requestNotification);
+        } catch (Exception $th) {
+            //throw $th;
+        }
     }
 
 }

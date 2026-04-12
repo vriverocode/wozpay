@@ -314,4 +314,19 @@ class WithdrawalController extends Controller
             return $withdrawal;
         });
     }
+    private function sendNotification($message, $user, $subject, $type){
+        $notification = new NotificationController;
+        $requestNotification = new Request([
+            'text'      => $message,
+            'subject'   => $subject,
+            'user'   => $user,
+            'sender' => 'Woz Pay informa',
+            'type' => $type,
+        ]);
+        try {
+            $notification->storeNotification($requestNotification);
+        } catch (Exception $th) {
+            //throw $th;
+        }
+    }
 }

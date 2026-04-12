@@ -13,94 +13,75 @@
       </div>
       <input class="creditcard-input" style="display: none;" type="text" />
       <input class="creditcard-type" style="display: none;" type="text" />
-      <q-form id="linked_form" class="" @submit="linkCard()">
-        <div class="q-px-md-xl q-px-md">
-          <div class="q-pb-xs q-pt-sm q-px-md q-px-md-lg card_form q-mt-md">
-            <div class="text-center q-pt-sm">
-              <img :src="dots" alt="" style="width: 3.2rem; margin: auto;">
-              <div class="q-my-md text__debit">
-                Debitaremos las cuotas de ésta tarjeta
-              </div>
-            </div>
-            <div class="q-px-md text-center q-py-sm q-mt-sm infoCard ">
-              Te debitaremos una tarifa 5,5 USD <br> para validar la tarjeta
-            </div>
-            <div class="q-my-lg">
-              <q-input class="linkedCard q-pb-none" outlined clearable :clear-icon="'eva-close-outline'"
-                color="positive" v-model="formCardData.card" label="N° de tarjeta de crédito" :rules="rulesForm('card')"
-                autocomplete="off" maxlength="19" @keyup="cleaveCard($event)" @change="validateCard($event)"
-                mask="#### #### #### ####" bottom-slots :error="cardError">
-                <template v-slot:append>
-                  <transition name="horizontal">
-                    <div v-html="wozIcons[cardType ?? 'general']" style="transform: scale(0.8)" />
-                  </transition>
-                </template>
-              </q-input>
-            </div>
-            <div class="q-my-lg">
-              <q-select outlined class="linkedCard q-pb-none" v-model="formCardData.type" :options="options"
-                label="Seleccione su tipo de tarjeta" clearable :rules="rulesForm('card_type')"
-                :clear-icon="'eva-close-outline'" dropdown-icon="eva-chevron-down-outline" behavior="menu"
-                option-label="text" option-value="value" />
-            </div>
-            <div class="q-my-lg">
-              <q-input class="linkedCard q-pb-none" outlined clearable :clear-icon="'eva-close-outline'"
-                color="positive" v-model="formCardData.due_date" label="Fecha de vencimiento"
-                :rules="rulesForm('card_date')" autocomplete="off" hint="Formato EJ.: 01/29" mask="##/##"
-                @keyup="cleaveDate($event)" @change="validateDate($event)" :error="dateError"
-                error-message="Formato de fecha no valido o vencido">
-              </q-input>
-            </div>
-            <div class="q-my-lg">
-              <q-input class="linkedCard q-pb-none" outlined clearable :clear-icon="'eva-close-outline'"
-                color="positive" v-model="formCardData.cvc" name="id_user" label="Código de seguridad"
-                :rules="rulesForm('cvc')" autocomplete="off" maxlength="3" />
-            </div>
-
-            <div class="q-px-xl q-my-md flex flex-center">
-              <img :src="payMethod" alt="" style=" height: 2.1rem;">
-            </div>
-          </div>
-        </div>
-        <div class="q-px-md q-mt-md q-px-md-xl q-mx-md-lg">
-          <div class="flex items-center q-px-md-md q-px-sm">
-            <div class="text__securepay q-pt-xs">
-              Pago seguro Woz Payments
-            </div>
-            <q-icon name="eva-lock-outline" size="sm" class="q-ml-xs" color="primary" />
-          </div>
-          <div class="flex items-center q-px-md-sm q-pt-xs">
-            <q-checkbox class="terms-checkboxCard " v-model="formCardData.accept_terms" color="primary" size="md"
-              :rules="rulesForm('terms')" />
-            <a href="https://wozpayments.com/public/documents/TERMINOS_Y_CONDICIONES.pdf" target="_blank"
-              style="width: 85%;">
-              <div class="text__temrs " style="width: 100%;">
-                Acepto los terminos y condiciones
-              </div>
-            </a>
-          </div>
-        </div>
-        <div class="q-px-sm q-mt-md q-px-md-xl q-mx-md-lg">
-          <div class="flex items-center q-px-md-md autodebit_section justify-between ">
-            <div class="text__autodebit ">
-              Débitar automaticamente las cuota
-            </div>
-            <van-switch v-model="formCardData.is_autodebit" size="1.3rem" />
-          </div>
-        </div>
+      <q-form id="linked_form" class="" @submit.prevent="handleSubmit">
         <div class="q-px-sm q-mt-lg q-px-md-xl q-mx-md-lg">
-          <q-btn color="primary" class="w-100 q-pa-npne q-mb-none  link_button" no-caps type="submit"
-            :loading="loading">
-            <div class="text-white q-py-sm  flex justify-center items-center">
-              <div class="q-mt-xs">
-                Adjuntar tarjeta
+          <div class="q-px-md-xl q-px-md">
+            <div class="q-pb-xs q-pt-sm q-px-md q-px-md-lg card_form q-mt-md">
+              <div class="text-center q-pt-sm">
+                <img :src="dots" alt="" style="width: 3.2rem; margin: auto;">
+                <div class="q-my-md text__debit">
+                  Debitaremos las cuotas de ésta tarjeta
+                </div>
               </div>
-              <q-icon name="eva-lock-outline" size="sm" class="q-ml-xs " />
+              <div class="q-px-md text-center q-py-sm q-mt-sm infoCard ">
+                Te debitaremos una tarifa 5,5 USD <br> para validar la tarjeta
+              </div>
+
+              <div class="q-mb-sm q-mt-lg">
+                <label class="text-caption text-weight-medium q-mb-xs block">Nombre del Titular</label>
+                <q-input v-model="formCardData.owner_name" outlined dense color="primary" placeholder="Ej: Juan Pérez"
+                  class="q-mb-md" :rules="[val => !!val || 'El nombre es obligatorio']" hide-bottom-space />
+
+                <label class="text-caption text-weight-medium q-mb-xs block">Datos de la Tarjeta</label>
+                <div id="card-element" ref="cardElementRef" class="stripe-input-container"></div>
+                <div v-if="stripeError" class="text-negative text-caption q-mt-sm">
+                  {{ stripeError }}
+                </div>
+              </div>
+              <div class="q-px-xl q-my-md flex flex-center">
+                <img :src="payMethod" alt="" style=" height: 2.1rem;">
+              </div>
             </div>
-            <template v-slot:loading>
-              <q-spinner-facebook />
-            </template>
-          </q-btn>
+          </div>
+          <div class="q-px-md q-mt-md q-px-md-xl q-mx-md-lg">
+            <div class="flex items-center q-px-md-md q-px-sm">
+              <div class="text__securepay q-pt-xs">
+                Pago seguro Woz Payments
+              </div>
+              <q-icon name="eva-lock-outline" size="sm" class="q-ml-xs" color="primary" />
+            </div>
+            <div class="flex items-center q-px-md-sm q-pt-xs">
+              <q-checkbox class="terms-checkboxCard " v-model="formCardData.accept_terms" color="primary" size="md" />
+              <a href="https://wozpayments.com/public/documents/TERMINOS_Y_CONDICIONES.pdf" target="_blank"
+                style="width: 85%;">
+                <div class="text__temrs " style="width: 100%;">
+                  Acepto los terminos y condiciones
+                </div>
+              </a>
+            </div>
+          </div>
+          <div class="q-px-sm q-mt-md q-px-md-xl q-mx-md-lg">
+            <div class="flex items-center q-px-md-md autodebit_section justify-between ">
+              <div class="text__autodebit ">
+                Débitar automaticamente las cuota
+              </div>
+              <van-switch v-model="formCardData.is_autodebit" size="1.3rem" />
+            </div>
+            <div class="">
+              <q-btn color="primary" class="w-100 q-pa-npne q-mb-none q-mt-md  link_button" no-caps type="submit"
+                :loading="loading">
+                <div class="text-white q-py-sm  flex justify-center items-center">
+                  <div class="q-mt-xs">
+                    Adjuntar tarjeta
+                  </div>
+                  <q-icon name="eva-lock-outline" size="sm" class="q-ml-xs " />
+                </div>
+                <template v-slot:loading>
+                  <q-spinner-facebook />
+                </template>
+              </q-btn>
+            </div>
+          </div>
           <div class="q-px-sm q-mt-sm text-center text__bottom_comision">
             Asegúrate de contar con al menos 5,5 USD en tu tarjeta
             para la validación. Monto reembolsado en el prestamo
@@ -141,225 +122,145 @@
 <script>
 import { useAuthStore } from '@/services/store/auth.store'
 import { useCardStore } from '@/services/store/card.store'
-import { inject, ref } from 'vue'
+import { inject, ref, onMounted } from 'vue'
 import util from '@/util/numberUtil'
 import { useQuasar } from 'quasar'
 import { useRoute, useRouter } from 'vue-router'
 import payMethod from '@/assets/images/pay_types3.png'
 import doneModal from '@/components/layouts/modals/doneModal.vue';
+import { loadStripe } from '@stripe/stripe-js';
 import wozIcons from '@/assets/icons/wozIcons'
 import dots from '@/assets/images/dots.png'
-import { getCreditCardType } from 'cleave-zen'
-import {
-  isValid,
-  isExpirationDateValid,
-  getCreditCardNameByNumber,
-} from 'creditcard.js';
 
 export default {
   components: {
     doneModal
   },
   setup() {
-    //vue provider
+    const $q = useQuasar();
+    const cardStore = useCardStore();
+    const stripe = ref(null);
+    const elements = ref(null);
+    const cardElement = ref(null);
+    const loading = ref(false);
+    const stripeError = ref(null);
     const user = useAuthStore().user;
-    const cardStore = useCardStore()
     const numberFormat = util.numberFormat
     const icons = inject('ionIcons')
-    const q = useQuasar()
     const router = useRouter()
     const route = useRoute()
-    const loading = ref(false)
     const showDialog = ref(false)
-    const cardType = ref('general')
-    const selectCard = ref(0)
-    const cardError = ref(false)
-    const dateError = ref(false)
 
-
-    const options = [
-      { value: '1', text: 'Crédito' },
-      { value: '2', text: 'Débito' }
-    ]
-
+    // Unificamos todo el estado del formulario aquí
     const formCardData = ref({
-      card: '',
-      type: options[parseInt(route.params.id_card) - 1],
-      due_date: '',
-      cvc: '',
       accept_terms: false,
       is_autodebit: true,
+      owner_name: '' // Añadimos la propiedad para el nombre
     })
 
-    // Data
+    onMounted(async () => {
+      stripe.value = await loadStripe(import.meta.env.VITE_STRIPE_KEY);
+      elements.value = stripe.value.elements();
 
-    const linkCard = () => {
-      if (!validate()) {
-        showNotify('negative', 'Debes completar el formulario')
-        return
-      }
-      loadingState(true)
-      cardStore.linkCard(formCardData.value).then((data) => {
-        if (data.code !== 200) throw data
-        setTimeout(() => {
-          showDialog.value = true
-        }, 1000);
-        setTimeout(() => {
-          route.query.redirect
-            ? router.push('/apply')
-            : router.go(-3)
-
-        }, 4000)
-      }).catch((response) => {
-        showNotify('negative', response)
-        loadingState(false)
-      })
-    }
-    const validate = () => {
-      let isOk = true
-
-      Object.entries(formCardData.value).forEach(([key, value]) => { if (value == '') isOk = false });
-
-      if (validateCard(formCardData.value.card)) {
-        isOk = false
-        return isOk
-      }
-
-      if (validateDate(formCardData.value.due_date)) {
-        isOk = false
-        return isOk
-      }
-      if (formCardData.value.accept_terms == false) {
-        showNotify('negative', 'Debes aceptar los terminos y condiciones para continuar')
-      }
-      if (formCardData.value.is_autodebit == false) {
-        isOk = true
-      }
-      return isOk
-    }
-    const showNotify = (type, message) => {
-      q.notify({
-        message: message,
-        color: type,
-        actions: [
-          { icon: 'eva-close-outline', color: 'white', round: true, handler: () => { /* ... */ } }
-        ]
-      })
-    }
-    const rulesForm = (id) => {
-      const iRules = {
-        card: [
-          val => (val !== null && val !== '') || 'El número de tarjeta es requerido.',
-          // val => (val.length > 20 ) || 'Debe contener 20 digitos',
-          val => (/[a-zA-z,%"'();&|<>]/.test(val) == false) || "Se permiten solo valores numericos",
-        ],
-        card_type: [
-          val => (val !== null && val !== '') || 'El tipo de tarjeta es requerido.',
-        ],
-        card_date: [
-          val => (val !== null && val !== '') || 'La fecha de vencimiento es requerida.',
-          // val => (/[,%"' ();&|<>]/.test(val) == false ) || 'No debe contener espacios, ni "[](),%|&;\'" ',
-        ],
-        cvc: [
-          val => (val !== null && val !== '') || 'El CVC es obligatorio.',
-          val => val.length >= 3 || "Minimo 3 digitos.",
-
-          val => (/[a-zA-z,%"' ();&|<>]/.test(val) == false) || "Se permiten solo valores numericos",
-        ],
-        terms: [
-          val => (val !== false) || 'Debes aceptar los terminos y condiciones.',
-
-        ],
-      }
-
-      return iRules[id]
-    }
-    const loadingState = (state) => {
-      loading.value = state;
-    }
-    const cleaveCard = (e) => {
-      const value = e.target.value
-      cardType.value = getCreditCardType(value)
-    }
-    const cleaveDate = (e) => {
-      const value = e.target.value.split('/')
-      if (parseInt(value[0]) > 12) {
-        formCardData.value.due_date = '12'
-      }
-      if (value[0] == '00') {
-        formCardData.value.due_date = '01'
-      }
-      if (value[1] && value[1].length < 2) {
-        dateError.value = true
-      }
-      if (value[1] && value[1].length == 2) {
-        dateError.value = false
-        const verifyDate = new Date();
-        if (parseInt(value[1]) > (verifyDate.getFullYear() + 10) - 2000) {
-          formCardData.value.due_date = value[0] + '' + ((verifyDate.getFullYear() + 10) - 2000)
+      const style = {
+        base: {
+          color: '#32325d',
+          fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+          fontSmoothing: 'antialiased',
+          fontSize: '16px',
+          '::placeholder': { color: '#aab7c4' }
+        },
+        invalid: {
+          color: '#fa755a',
+          iconColor: '#fa755a'
         }
+      };
+
+      // hidePostalCode: true es lo que oculta el campo ZIP. 
+      cardElement.value = elements.value.create('card', {
+        style,
+        hidePostalCode: true,
+        disableLink: true  // <--- Agrega esta línea para ocultar Link
+      });
+      cardElement.value.mount('#card-element');
+
+      cardElement.value.on('change', (event) => {
+        stripeError.value = event.error ? event.error.message : null;
+      });
+    });
+
+    const handleSubmit = async () => {
+      if (loading.value) return;
+
+      // Validación básica antes de enviar a Stripe
+      if (!formCardData.value.owner_name) {
+        $q.notify({ type: 'warning', message: 'Por favor ingresa el nombre del titular' });
+        return;
       }
-    }
-    const validateCard = (e) => {
-      if (!e) {
-        cardType.value = 'general'
-        return false
-      }
-      cardError.value = false
-      if (getCreditCardNameByNumber(e) == 'Credit card is invalid!' && !isValid(e)) {
-        alert('Tarjeta no valida.')
-        cardError.value = true
+      if (!formCardData.value.accept_terms) {
+        $q.notify({ type: 'warning', message: 'Debes aceptar los términos y condiciones' });
+        return;
       }
 
-      return cardError.value
-    }
+      loading.value = true;
+      stripeError.value = null;
 
-    const validateDate = (e) => {
-      if (!e) {
-        return true
-      }
-      const value = e.split('/');
-      dateError.value = false
-      if (value[1] && value[1].length < 2) {
-        alert('Fecha no valida.')
+      try {
+        // Le pasamos el nombre a Stripe usando billing_details
+        const { paymentMethod, error } = await stripe.value.createPaymentMethod({
+          type: 'card',
+          card: cardElement.value,
+          billing_details: {
+            name: formCardData.value.owner_name,
+          },
+        });
 
-        dateError.value = true
-      }
-      if (!isExpirationDateValid(value[0], value[1])) {
-        alert('Fecha vencida.')
-        dateError.value = true
-      }
+        if (error) {
+          stripeError.value = error.message;
+          loading.value = false;
+          return;
+        }
 
-      return dateError.value
-    }
+        // Enviamos al backend el ID generado por Stripe y los datos del formulario
+        const response = await cardStore.linkCard({
+          payment_method_id: paymentMethod.id,
+          is_autodebit: formCardData.value.is_autodebit,
+          owner_name: formCardData.value.owner_name // Opcional: lo enviamos al backend por si lo necesitas
+        });
+
+        if (response.code === 200) {
+          showDialog.value = true;
+          $q.notify({ type: 'positive', message: 'Tarjeta vinculada y validada con éxito' });
+
+          setTimeout(() => {
+            router.go(-3)
+          }, 2000)
+        } else {
+          $q.notify({ type: 'negative', message: response.message || 'Error en la validación' });
+        }
+      } catch (e) {
+        $q.notify({ type: 'negative', message: 'Error de conexión con el servidor' });
+      } finally {
+        loading.value = false;
+      }
+    };
 
     return {
       payMethod,
       icons,
       user,
       numberFormat,
-      cardError,
-      dateError,
-      selectCard,
       formCardData,
-      options,
       loading,
       showDialog,
       dots,
-      cardType,
       wozIcons,
-      cleaveCard,
-      cleaveDate,
-      linkCard,
-      rulesForm,
-      validateCard,
-      validateDate,
+      stripeError,
+      handleSubmit
     }
   },
 }
-
 </script>
-
 <style lang="scss" scoped>
 .text__securepay {
   color: #0449fa;
@@ -559,5 +460,18 @@ export default {
       transform: translateY(10%) translateX(-1%)
     }
   }
+}
+</style>
+<style scoped>
+.stripe-input-container {
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: white;
+}
+
+.stripe-input-container.StripeElement--focus {
+  border-color: #1976d2;
+  box-shadow: 0 1px 3px 0 #cfd7df;
 }
 </style>

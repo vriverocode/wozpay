@@ -2,26 +2,27 @@
 
 namespace App\Http\Controllers\Api;
 
-use Exception;
-use App\Models\Pay;
-use App\Models\Link;
-use App\Models\Loan;
-use App\Models\User;
-use App\Models\Quota;
-use App\Models\Wallet;
-use App\Models\Package;
-use App\Models\PayLink;
-use Illuminate\Http\Request;
 use App\Events\UserUpdateEvent;
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Controller;
+use App\Models\Coin;
 use App\Models\DropshippingAccount;
 use App\Models\DropshippingLink;
 use App\Models\DropshippingPay;
+use App\Models\Link;
+use App\Models\Loan;
+use App\Models\Package;
+use App\Models\Pay;
+use App\Models\PayLink;
+use App\Models\Quota;
+use App\Models\User;
+use App\Models\Wallet;
 use Carbon\Carbon;
+use Exception;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Validator;
 
 class PayController extends Controller
 {
@@ -121,6 +122,7 @@ class PayController extends Controller
     public function storeStripePayLink($data)
     {
         try {
+            $coin = Coin::find($data['link']->coin_id);
             $payLink = PayLink::create([
                 'link_id'       =>  $data['link']->id,
                 'amount'        =>  $data['link']->amount, 
@@ -145,6 +147,17 @@ class PayController extends Controller
 
         // Si necesitas emitir un evento específico para cuando pagan un link, hazlo aquí.
         // event(new \App\Events\UserUpdateEvent( ... ));
+         try {
+            //code...
+            event(new UserUpdateEvent(1));
+    
+    
+            $this->sendNotification(
+            'Recibiste un pago del link #'.$data['link']->code .' , por '.$coin->code.' '.$payLink->amount,$data['link']->user_id, 
+            'Pago recibido🤑 ', 1);
+        } catch (Exception $th) {
+            //throw $th;
+        }
         
         return $payLink->id;
     }

@@ -111,7 +111,7 @@ export default {
         .then((response) => {
           if (response.code !== 200) throw response
           userLinks.value = response.data
-          clocks(response.data)
+          // clocks(response.data)
           setTimeout(() => {
             load.value = true
           }, 500);
