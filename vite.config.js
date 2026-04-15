@@ -55,6 +55,6 @@ export default defineConfig({
         // 👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇
         // Configure CORS securely for the Vite dev server to allow requests from *.ddev.site domains,
         // supports additional hostnames (via regex). If you use another `project_tld`, adjust this.
-        cors: { origin: /^https?:\/\/(?:(?:[^:]+\.)?localhost|127\.0\.0\.1|10\.10\.10\.69|192\.168\.31\.20|192\.168\.1\.229|192\.168\.1\.198|\[::1\])(?::\d+)?$/ },
+        cors: { origin: /^https?:\/\/(?:(?:[^:]+\.)?localhost|127\.0\.0\.1|10\.10\.10\.69|192\.168\.31\.20|192\.168\.1\.229|192\.168\.1\.183|192\.168\.1\.198|\[::1\])(?::\d+)?$/ },
     },
 });

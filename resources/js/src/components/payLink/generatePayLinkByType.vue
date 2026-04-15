@@ -298,6 +298,9 @@ export default {
         ],
         amount: [
           val => (val !== null && val !== '') || 'Monto es requerido',
+          val => selectedCoin.value.id == 1 
+          ? (parseInt(val.replace(/\./g, ''))  >=150000 )  || 'Monto debe ser igual o mayor  a Gs. 150.000' 
+          : (parseInt(val.replace(/\./g, ''))  >=10 )|| 'Monto debe ser igual o mayor a 10 Usd',
         ],
         description: [
           val => (val !== null && val !== '') || 'Detalles de producto es requerido.',
