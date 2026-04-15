@@ -306,6 +306,33 @@ export default {
           text: transaction.value.concept,
         }
       }
+      if (transactionType == 12) {
+        lines[1] = {
+          title: 'Cuenta de banco',
+          value: transaction.value.account_bank.account_number,
+        };
+        // lines[2] = {
+        //   title: 'Referencia',
+        //   value: transaction.value.operation_id,
+        // };
+        lines[2] = {
+          title: 'Banco',
+          value: transaction.value.account_bank.bank.name,
+        };
+        lines[3] = {
+          title: 'Metodo de pago',
+          value: transaction.value.method_label,
+        };
+
+        lines[4] = {
+          title: 'Comisión',
+          value: 'Gs. ' + numberFormat(transaction.value.comision_by_type) + ' (' + transaction.value.comision_type_label + '%)',
+        };
+        lines[5] = {
+          title: 'Comisión fija',
+          value: 'Gs. ' + numberFormat(transaction.value.comision_fixed),
+        };
+      }
       if (transactionType == 15) {
         let products = JSON.parse(transaction.value.link.products)
         let productText = ""

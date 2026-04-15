@@ -129,6 +129,8 @@ class WithdrawalController extends Controller
 
             $withdrawal->status = $status;
             $withdrawal->save();
+
+            $this->toDoAction($withdrawal);
         } catch (Exception $th) {
             return $this->returnFail(400, $th->getMessage());
         }
@@ -308,7 +310,8 @@ class WithdrawalController extends Controller
 
             $wallet = Wallet::where('user_id', $user->id)->where('type', 2)->first();
             if ($wallet) {
-                $wallet->decrement('balance', $requestData['amount']);
+                $wallet->balance = $wallet->balance - $requestData['amount'];
+                $wallet->save();
             }
 
             return $withdrawal;
@@ -327,6 +330,47 @@ class WithdrawalController extends Controller
             $notification->storeNotification($requestNotification);
         } catch (Exception $th) {
             //throw $th;
+        }
+    }
+    private function toDoAction($withdrawal){
+        $message = $withdrawal->status == 0 
+            ? "Tu orden de retiro fue rechazada por nuestro departamento administrativo, comunicate con soporte"
+            : "Orden de retiro procesada con exito";
+
+            $type = $withdrawal->status == 0
+            ? 3
+            : 2;
+            $subject = $withdrawal->status == 0
+            ? 'Orden de retiro rechazada'
+            : 'Orden de retiro aprobada';
+
+            if($withdrawal->status == 0){
+                $this->processRejectionTransaction($withdrawal);
+            }
+
+            $this->sendNotification($message, $withdrawal->user_id, $subject, $type,);
+    }
+
+    
+    private function processRejectionTransaction($withdrawal)
+    {
+        DB::transaction(function () use ($withdrawal) {
+            $this->unmarkAssociatedLinks($withdrawal->id);
+            $this->restoreWalletBalance($withdrawal->user_id, $withdrawal->amount);
+        });
+    }
+
+    private function unmarkAssociatedLinks($withdrawalId)
+    {
+        Link::where('withdrawal_id', $withdrawalId)->update(['withdrawal_id' => null]);
+    }
+
+    private function restoreWalletBalance($userId, $amount)
+    {
+        $wallet = Wallet::where('user_id', $userId)->where('type', 2)->first();
+        
+        if ($wallet) {
+            $wallet->increment('balance', $amount);
         }
     }
 }

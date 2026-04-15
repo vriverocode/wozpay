@@ -14,6 +14,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use App\Http\Controllers\Controller;
 use App\Models\DropshippingPay;
 use App\Models\PayLink;
+use App\Models\Withdrawal;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 
 class TransactionController extends Controller
@@ -34,7 +35,13 @@ class TransactionController extends Controller
         $activationPay = Pay::with('user')->where('user_id',$userId)->where('type',5)->where('status', '2')->whereMonth('created_at',$request->month+1)->whereYear('created_at', $request->year)->get();
         $activationPayDrop = Pay::with('user')->where('user_id',$userId)->where('type',11)->where('status', '2')->whereMonth('created_at',$request->month+1)->whereYear('created_at', $request->year)->get();
 
-        $packagePay = Pay::with('user', 'package')->where('user_id',$userId)->where('type',6)->where('status', '2')->whereMonth('created_at',$request->month+1)->whereYear('created_at', $request->year)->get();
+        $packagePay = Pay::with('user', 'package')->where('user_id',$userId)->where('type',6)
+        ->where('status', '2')
+        ->whereMonth('created_at',$request->month+1)->whereYear('created_at', $request->year)->get();
+
+
+        $withdrawal = Withdrawal::with(['user', 'accountBank'])->where('user_id',$userId)->where('status', '2')
+        ->whereMonth('created_at',$request->month+1)->whereYear('created_at', $request->year)->get();
         
         
         // $paysLink = PayLink::with('links')->whereHas('links', function (Builder $query) use ($userId){
@@ -58,6 +65,7 @@ class TransactionController extends Controller
             ...$this->tagTransfer($send->transferSend ?? [],5) ,
             ...$this->tagTransfer($loans ?? [],6) ,
             ...$this->tagTransfer($links ?? [],7) ,
+            ...$this->tagTransfer($withdrawal ?? [],12) ,
             // ...$activationPay,
             ...$packagePay,
             ...$activationPayDrop,
@@ -90,17 +98,6 @@ class TransactionController extends Controller
             'transaction' =>  $this->formatRecipePrint($type, $transaction),
             'title' => $this->getTitleByType($type) ]);
 
-        // if(){
-
-        //     $order = OutOrder::with('products', 'order.client')->where('id',$id)->first();
-    
-        //     if(!$order) return $this->returnFail(400, 'algo ha salido mal');
-    
-            
-        // }
-       
-        // return $transaction;
-        // return $order;
     }
     private function trasactionByType($type, $id){
         if($type == 1 ){
@@ -132,6 +129,9 @@ class TransactionController extends Controller
         }
         if($type == 11){
             return Pay::with('user')->where('type', 11)->find($id);
+        }
+        if($type == 12){
+            return Withdrawal::with('user', 'accountBank.bank')->find($id);
         }
         if($type == 15){
             return DropshippingPay::with('link.user', 'coin')->find($id);
@@ -167,7 +167,8 @@ class TransactionController extends Controller
             'Activación cuenta internacional',
             'Comprobante de pago de paquetes',
             'Comprobante de pago',
-            'Pago de activación de cuenta Woz Dropshipping'
+            'Pago de activación de cuenta Woz Dropshipping',
+            'Retiro instantaneo'
         ];
 
         return $types[$type];
@@ -334,6 +335,28 @@ class TransactionController extends Controller
             $lines[3] = [
                 'title' => 'Concepto',
                 'value' => $transaction->concept,
+            ];
+        }
+         if($type == 12)  {
+            $lines[1] = [
+                'title' =>'Cuenta de banco',
+                'value' => $transaction->account_bank->account_number,
+            ];
+            $lines[2] = [
+                'title' => 'Referencia',
+                'value' => $transaction->operation_id,
+            ];
+            $lines[3] = [
+                'title' => 'Metodo de pago',
+                'value' => $transaction->method_label,
+            ];
+            $lines[3] = [
+                'title' => 'Comisión',
+                'value' => $transaction->comision_type_label,
+            ];
+            $lines[4] = [
+                'title' => 'Comisión fija',
+                'value' => 7500,
             ];
         }
 

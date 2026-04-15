@@ -27,7 +27,7 @@
                 <q-item v-bind="scope.itemProps" class="q-mb-sm">
                   <q-item-section>
                     <q-item-label>{{ scope.opt.name }}</q-item-label>
-                    <q-item-label caption>{{ scope.opt.description }}</q-item-label>
+                    <q-item-label caption>{{ scope.opt.description }}</q-item-label>s
                   </q-item-section>
                 </q-item>
               </template>
@@ -56,7 +56,7 @@
                 v-model="selectedCoin" :options="optionCoin" :clear-icon="'eva-close-outline'"
                 dropdown-icon="eva-chevron-down-outline" behavior="menu" color="positive"
                 :hint="selectedCoin.id == 1 ? '' : '1 USD ≈ ' + 'Gs.' + numberFormat(selectedCoin.rate)"
-                class="linkPaySelectType" @update:model-value="updateType()" />
+                class="linkPaySelectType" @update:model-value="totalToClient()" />
             </div>
             <div v-if="selectedOption.id == 2" class="q-mt-sm q-pb-md">
               <q-input class="linkPaySelectType2" outlined clearable :clear-icon="'eva-close-outline'" color="positive"
@@ -277,8 +277,6 @@ export default {
       }
       return days;
     }
-
-
     const header = ref(title[parseInt(route.params.type)])
     const selectedOption = ref(optionsLink.find(el => el.id == parseInt(route.params.type)))
     const selectedCoin = ref({})
@@ -336,10 +334,6 @@ export default {
         showNotify('negative', 'El monto debe ser mayor a 0')
         return
       }
-      // if(countLink.value >= limit()){
-      //   showNotify('negative', 'Alcanzaste el maximo de tus links, adquiere un paquete')
-      //   return
-      // }
       loading.value = true
       const data = {
         note: product.value.details,
@@ -409,14 +403,12 @@ export default {
       return [free, '', member, freelance, sell,]
     }
     const totalToClient = () => {
-      // product.value.to_client = route.params.type == 0 && !isNaN((parseInt(product.value.amount.replace(/\./g, ''),)*0.02)) 
-      //           ? numberFormat((parseInt(product.value.amount.replace(/\./g, '') - parseInt(product.value.amount.replace(/\./g, ''))*0.02)))
-      //           : !isNaN((parseInt(product.value.amount.replace(/\./g, ''),)*0.12) ) 
-      //           ? numberFormat((parseInt(product.value.amount.replace(/\./g, '') - parseInt(product.value.amount.replace(/\./g, ''))*0.12) )- (7800/selectedCoin.value.rate) )
-      //           : 0
 
+      const comisionFija = selectedCoin.value.id == 1 ? 6900 : (6900 / selectedCoin.value.rate).toFixed(2)
+
+      console.log(comisionFija)
       product.value.to_client = !isNaN((parseInt(product.value.amount.replace(/\./g, ''),) * feedWoz.value))
-        ? numberFormat((parseInt(product.value.amount.replace(/\./g, '') - parseInt(product.value.amount.replace(/\./g, '')) * feedWoz.value) - 6900))
+        ? numberFormat((parseInt(product.value.amount.replace(/\./g, '') - parseInt(product.value.amount.replace(/\./g, '')) * feedWoz.value) - comisionFija))
         : 0
     }
     onMounted(() => {
